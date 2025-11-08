@@ -1,8 +1,8 @@
 {
   "providers": {
     "tomorrow_io": {
-      "apiKeys":"<INSERT-KEY-HERE>"[
-        "<INSERT-KEY-HERE>"
+      "apiKeys": [
+        "<TOMORROW_IO_KEY_1>"
       ],
       "baseUrl": "https://api.tomorrow.io/v4",
       "defaultUnits": "metric",
@@ -12,7 +12,7 @@
       ],
       "siteUrl": "https://www.tomorrow.io/",
       "docsUrl": "https://docs.tomorrow.io/reference/welcome",
-      "batchSize": 5
+      "batchSize": 100
     },
     "open_meteo": {
       "forecastUrl": "https://api.open-meteo.com/v1/forecast",
@@ -34,10 +34,10 @@
       },
       "siteUrl": "https://open-meteo.com/",
       "docsUrl": "https://open-meteo.com/en/docs",
-      "batchSize": 5
+      "batchSize": 1000
     },
     "visual_crossing": {
-      "apiKey": "<INSERT-KEY-HERE>",
+      "apiKey": "<VISUAL_CROSSING_KEY>",
       "baseUrl": "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline",
       "defaultUnitGroup": "metric",
       "defaultInclude": [
@@ -48,12 +48,12 @@
       "defaultLanguage": "en",
       "siteUrl": "https://www.visualcrossing.com/",
       "docsUrl": "https://www.visualcrossing.com/weather-api/",
-      "batchSize": 5
+      "batchSize": 100
     },
     "noaa_isd": {
       "baseUrl": "https://www.ncei.noaa.gov/access/services/data/v1",
       "dataset": "global-hourly",
-      "token": "<INSERT-NOAA-ACCESS-TOKEN>",
+      "token": "<NOAA_TOKEN>",
       "defaultUnits": "metric",
       "defaultDataTypes": [
         "TMP",
@@ -66,32 +66,41 @@
       "includeStationName": true,
       "siteUrl": "https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database",
       "docsUrl": "https://www.ncei.noaa.gov/support/access-data-service-api-user-documentation",
-      "batchSize": 5
+      "batchSize": 100
     },
     "noaa_lcd": {
       "baseUrl": "https://www.ncei.noaa.gov/access/services/data/v1",
       "dataset": "local-climatological-data",
-      "token": "<INSERT-NOAA-ACCESS-TOKEN>",
+      "token": "<NOAA_TOKEN>",
       "defaultUnits": "metric",
       "responseFormat": "json",
       "stationAttribute": "noaaLcdStation",
       "includeStationName": true,
       "siteUrl": "https://www.ncei.noaa.gov/products/land-based-station/local-climatological-data",
       "docsUrl": "https://www.ncei.noaa.gov/support/access-data-service-api-user-documentation",
-      "batchSize": 5
+      "batchSize": 100
     },
     "weatherapi_com": {
-      "apiKey": "<INSERT-KEY-HERE>",
+      "apiKeys": [
+        "<WEATHERAPI_KEY_1>",
+        "<WEATHERAPI_KEY_2>",
+        "<WEATHERAPI_KEY_3>",
+        "<WEATHERAPI_KEY_4>",
+        "<WEATHERAPI_KEY_5>",
+        "<WEATHERAPI_KEY_6>",
+        "<WEATHERAPI_KEY_7>",
+        "<WEATHERAPI_KEY_8>"
+      ],
       "baseUrl": "https://api.weatherapi.com/v1",
       "defaultForecastDays": 3,
       "defaultAqi": "yes",
       "defaultAlerts": "yes",
       "siteUrl": "https://www.weatherapi.com/",
       "docsUrl": "https://www.weatherapi.com/docs/",
-      "batchSize": 5
+      "batchSize": 100
     },
     "openweather": {
-      "apiKey": "<INSERT-KEY-HERE>",
+      "apiKey": "<OPENWEATHER_KEY>",
       "defaultUnits": "metric",
       "siteUrl": "https://openweathermap.org/",
       "docsUrl": {
@@ -102,10 +111,10 @@
       "historyUrl": "https://history.openweathermap.org/data/2.5/history/city",
       "defaultLanguage": "en",
       "defaultHistoryType": "hour",
-      "batchSize": 5
+      "batchSize": 100
     },
     "weatherbit": {
-      "apiKey": "<INSERT-KEY-HERE>",
+      "apiKey": "<WEATHERBIT_KEY>",
       "forecastUrl": "https://api.weatherbit.io/v2.0/forecast/hourly",
       "historicalUrl": "https://api.weatherbit.io/v2.0/history/subhourly",
       "defaultUnits": "M",
@@ -113,7 +122,7 @@
       "defaultTimezone": "UTC",
       "siteUrl": "https://www.weatherbit.io/",
       "docsUrl": "https://www.weatherbit.io/api/swaggerui/weather-api-v2#/Sub45Hourly32Historical32Weather32Data",
-      "batchSize": 5
+      "batchSize": 100
     },
     "meteostat": {
       "defaultTimezone": "UTC",
@@ -121,7 +130,7 @@
       "requestThrottleSeconds": 0.0,
       "siteUrl": "https://meteostat.net/en/",
       "docsUrl": "https://dev.meteostat.net/python/api/point/",
-      "batchSize": 5
+      "batchSize": 50
     },
     "nasa_power": {
       "baseUrl": "https://power.larc.nasa.gov/api/temporal/hourly/point",
@@ -139,7 +148,7 @@
       "format": "JSON",
       "userAgent": "DL-Project/1.0",
       "includeMetadata": false,
-      "batchSize": 5,
+      "batchSize": 50,
       "siteUrl": "https://power.larc.nasa.gov/",
       "docsUrl": "https://power.larc.nasa.gov/docs/services/api/temporal/hourly/"
     },
@@ -157,13 +166,13 @@
       "timezone": "UTC",
       "sample": "1min",
       "delimiter": "comma",
-      "batchSize": 5,
+      "batchSize": 25,
       "siteUrl": "https://mesonet.agron.iastate.edu/request/asos/",
       "docsUrl": "https://mesonet.agron.iastate.edu/request/asos/1min.phtml"
     },
     "copernicus_era5_single": {
       "apiUrl": "https://cds.climate.copernicus.eu/api",
-      "apiKey": "<INSERT-CDS-API-KEY>",
+      "apiKey": "<COPERNICUS_KEY>",
       "dataset": "reanalysis-era5-single-levels",
       "mode": "single_levels",
       "productType": "reanalysis",
@@ -191,7 +200,7 @@
     },
     "copernicus_era5_land": {
       "apiUrl": "https://cds.climate.copernicus.eu/api",
-      "apiKey": "<INSERT-CDS-API-KEY>",
+      "apiKey": "<COPERNICUS_KEY>",
       "dataset": "reanalysis-era5-land",
       "mode": "land",
       "variables": [
@@ -217,7 +226,7 @@
     },
     "copernicus_era5_pressure": {
       "apiUrl": "https://cds.climate.copernicus.eu/api",
-      "apiKey": "<INSERT-CDS-API-KEY>",
+      "apiKey": "<COPERNICUS_KEY>",
       "dataset": "reanalysis-era5-pressure-levels",
       "mode": "pressure_levels",
       "productType": "reanalysis",
@@ -248,7 +257,7 @@
     },
     "copernicus_era5_land_timeseries": {
       "apiUrl": "https://cds.climate.copernicus.eu/api",
-      "apiKey": "<INSERT-CDS-API-KEY>",
+      "apiKey": "<COPERNICUS_KEY>",
       "dataset": "reanalysis-era5-land-timeseries",
       "mode": "land_timeseries",
       "variables": [
@@ -267,10 +276,10 @@
     "new_york_ny": {
       "lat": 40.78,
       "lon": -73.97,
-      "noaaIsdStation": "<INSERT-STATION-ID>",
-      "noaaLcdStation": "<INSERT-STATION-ID>",
-      "iemStation": "<INSERT-STATION-ID>",
-      "iemNetwork": "<INSERT-NETWORK-ID>",
+      "noaaIsdStation": "72505394728",
+      "noaaLcdStation": "72505394728",
+      "iemStation": "NYC",
+      "iemNetwork": "NY_ASOS",
       "copernicusEra5Area": [
         41.03,
         -74.22,
@@ -287,10 +296,10 @@
     "austin_tx": {
       "lat": 30.18,
       "lon": -97.68,
-      "noaaIsdStation": "<INSERT-STATION-ID>",
-      "noaaLcdStation": "<INSERT-STATION-ID>",
-      "iemStation": "<INSERT-STATION-ID>",
-      "iemNetwork": "<INSERT-NETWORK-ID>",
+      "noaaIsdStation": "72254013904",
+      "noaaLcdStation": "72254013904",
+      "iemStation": "AUS",
+      "iemNetwork": "TX_ASOS",
       "copernicusEra5Area": [
         30.43,
         -97.93,
@@ -307,10 +316,10 @@
     "chicago_midway_il": {
       "lat": 41.78,
       "lon": -87.76,
-      "noaaIsdStation": "<INSERT-STATION-ID>",
-      "noaaLcdStation": "<INSERT-STATION-ID>",
-      "iemStation": "<INSERT-STATION-ID>",
-      "iemNetwork": "<INSERT-NETWORK-ID>",
+      "noaaIsdStation": "72534014819",
+      "noaaLcdStation": "72534014819",
+      "iemStation": "MDW",
+      "iemNetwork": "IL_ASOS",
       "copernicusEra5Area": [
         42.03,
         -88.01,
@@ -327,10 +336,10 @@
     "los_angeles_ca": {
       "lat": 33.94,
       "lon": -118.39,
-      "noaaIsdStation": "<INSERT-STATION-ID>",
-      "noaaLcdStation": "<INSERT-STATION-ID>",
-      "iemStation": "<INSERT-STATION-ID>",
-      "iemNetwork": "<INSERT-NETWORK-ID>",
+      "noaaIsdStation": "72295023174",
+      "noaaLcdStation": "72295023174",
+      "iemStation": "LAX",
+      "iemNetwork": "CA_ASOS",
       "copernicusEra5Area": [
         34.19,
         -118.64,
@@ -347,10 +356,10 @@
     "miami_fl": {
       "lat": 25.79,
       "lon": -80.32,
-      "noaaIsdStation": "<INSERT-STATION-ID>",
-      "noaaLcdStation": "<INSERT-STATION-ID>",
-      "iemStation": "<INSERT-STATION-ID>",
-      "iemNetwork": "<INSERT-NETWORK-ID>",
+      "noaaIsdStation": "72202012839",
+      "noaaLcdStation": "72202012839",
+      "iemStation": "MIA",
+      "iemNetwork": "FL_ASOS",
       "copernicusEra5Area": [
         26.04,
         -80.57,

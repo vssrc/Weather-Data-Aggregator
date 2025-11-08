@@ -31,14 +31,47 @@ Automated tooling for collecting, caching, and exploring weather observations an
 
 ---
 
+## Supported providers, datasets, and APIs
+
+The aggregator currently integrates the following upstream services. Each client is implemented under `clients/` and driven by the matching block in `weather_config.json`.
+
+| Provider key | Public name | Primary API / dataset | Cadence & scope | Notes |
+| --- | --- | --- | --- | --- |
+| `tomorrow_io` | Tomorrow.io Timelines | `https://api.tomorrow.io/v4/timelines` | Sub-hourly & hourly forecast / recent history | Rotates across multiple API keys, configurable timesteps and units. |
+| `open_meteo` | Open-Meteo | Forecast & Archive APIs | Hourly & daily weather variables | Supports unit overrides per variable and forecast/past day windows. |
+| `visual_crossing` | Visual Crossing | Timeline Weather API | Hourly forecast & history (JSON) | Location path parameters with optional include lists (days/hours). |
+| `noaa_isd` | NOAA Integrated Surface Database | Access Data Service `dataset=global-hourly` | Hourly & sub-hourly station observations | Requires station IDs and NOAA token; parses METAR style fields. |
+| `noaa_lcd` | NOAA Local Climatological Data | Access Data Service `dataset=local-climatological-data` | Hourly LCD observations | Shares the NOAA token, exposes station names when requested. |
+| `weatherapi_com` | WeatherAPI.com | Forecast, History, Future & Current endpoints | Hourly forecast/history up to 14 days | Supports key rotation, AQI/alert toggles, language overrides. |
+| `openweather` | OpenWeather | Current & History APIs | Hourly history via `type=hour` | Requires a single API key; converts ISO timestamps to UNIX for history requests. |
+| `weatherbit` | Weatherbit | Hourly forecast & sub-hourly history endpoints | Hourly data windows | Handles UTC timestamp formatting for historical pulls. |
+| `meteostat` | Meteostat Python SDK | Meteostat Hourly dataset | Hourly blended observations | Uses the local Meteostat cache/model data toggle, returns Pandas frames. |
+| `nasa_power` | NASA POWER | Hourly point endpoint | Hourly satellite/model parameters | Requests configurable parameter lists and normalises responses to tabular form. |
+| `iem_asos` | Iowa Environmental Mesonet ASOS | `asos1min.py` CSV service | 1-minute ASOS observations | Depends on station + network IDs and converts CSV output to DataFrames. |
+| `copernicus_era5_single` | Copernicus ERA5 (single levels) | CDS dataset `reanalysis-era5-single-levels` | Hourly grid (NetCDF) | Requires CDS API key; downloads and trims NetCDF to configured area. |
+| `copernicus_era5_land` | Copernicus ERA5-Land | CDS dataset `reanalysis-era5-land` | Hourly land grid (NetCDF) | Builds year/month/day requests based on day range; uses 0.1° grid. |
+| `copernicus_era5_pressure` | Copernicus ERA5 (pressure) | CDS dataset `reanalysis-era5-pressure-levels` | Hourly pressure levels (NetCDF) | Adds pressure level list and product type for reanalysis requests. |
+| `copernicus_era5_land_timeseries` | Copernicus ERA5-Land Timeseries | CDS dataset `reanalysis-era5-land-timeseries` | Hourly point CSV series | Retrieves CSV per point without area selection, ideal for quick summaries. |
+
+All providers share the batch execution infrastructure in `clients/__init__.py`, enabling concurrent request fans with optional throttling.
+
+---
+
 ## Configuration (`weather_config.json`)
 
 Key sections:
 
-- **`providers`** – One entry per supported API with credentials, base URLs, default units, and optional `batchSize`.
-- **`locations`** – Named latitude/longitude pairs reused across notebooks and scripts (e.g. `"boston_ma": {"lat": 42.3601, "lon": -71.0589}`).
+- **`providers`** – One entry per supported API with credentials, base URLs, dataset identifiers, default units, batching hints, and documentation links.
+- **`locations`** – Named latitude/longitude pairs, plus provider-specific metadata (e.g. NOAA station IDs or Copernicus area bounds) reused across notebooks and scripts.
 
 > **Tip:** Add or adjust locations here and both the notebooks and export script will automatically process all defined sites.
+
+### Using the configuration template
+
+1. Copy `weather_config.json.template` to `weather_config.json`.
+2. Replace every placeholder token (strings wrapped in `<...>`) with your real API keys, tokens, or CDS credentials. Leave structural values (URLs, default units, area arrays, etc.) untouched unless you need different defaults.
+3. Review the `locations` block and update station identifiers or bounding boxes as needed. Lat/lon pairs in the template match the example cities already referenced by notebooks and the exporter.
+4. Keep sensitive credentials out of version control—commit only the template.
 
 ---
 
@@ -83,7 +116,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-The repository targets Python 3.9+ (matching the `.venv` metadata). If running in headless environments, note that `matplotlib` is configured to use the `Agg` backend for image generation.
+The repository targets Python 3.9+ (matching the `.venv` metadata). If running in headless environments, note that `matplotlib` is configured to use the `Agg` backend for image generation, and `tqdm` supplies the optional progress bars rendered by the exporter.
 
 ---
 
