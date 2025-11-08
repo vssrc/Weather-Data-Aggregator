@@ -1,0 +1,6 @@
+weather_config.json
+data/
+.venv/
+.pycache/
+logs//logs/
+/logs/
