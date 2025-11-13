@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+        <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IEM :: ASOS One Minute Data Download</title>
+    <meta name="description" content="Iowa State University, Iowa Environmental Mesonet">
+    <meta name="author" content="daryl herzmann akrherz@iastate.edu">
+
+    <link href="/vendor/bootstrap/5.3.6/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons for UI and navigation -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="/css/iastate-iem.css" rel="stylesheet">
+
+    <!-- Any page specific headextra content here -->
+    <link rel="stylesheet" href="/vendor/openlayers/10.6.1/ol.css" type="text/css">
+<link rel="stylesheet" href="/css/iemss.css" type="text/css"><style type="text/css">
+#map {
+    width: 100%;
+    height: 450px;
+    border: 2px solid black;
+}
+</style>
+    <!-- Essential Social Tags -->
+    <meta property="og:title" content="IEM :: ASOS One Minute Data Download">
+    <meta property="og:description" content="Iowa Environmental Mesonet of Iowa State University">
+    <meta property="og:image" content="https://mesonet.agron.iastate.edu/images/logo_large.png">
+    <meta property="og:url" content="https://mesonet.agron.iastate.edu/request/asos/1min.phtml">
+        <meta name="twitter:card" content="summary">
+
+    <!-- Non-essential -->
+    <meta name="twitter:creator" content="@akrherz">
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/apple-touch-icon-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/apple-touch-icon-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png">
+  </head>
+
+  <body>
+    <a href="#main-content" class="visually-hidden-focusable">Skip to main content</a>
+<header>
+<!-- Mobile navbar: Simple single row with logo, search, and hamburger -->
+<nav class="navbar-site d-block d-lg-none" aria-label="Utility navigation">
+    <div class="container">
+        <div class="mobile-navbar-row d-flex align-items-center">
+            <div class="mobile-logo me-2">
+                <a href="/" title="Home">
+                    <img src="/images/logo_small.png" alt="IEM" height="30">
+                </a>
+            </div>
+            
+            <div class="mobile-search flex-fill me-2">
+                <form action="/search" method="GET" role="search">
+                    <input name="q" aria-label="Search" title="Search" placeholder="Search 'DSM' 'autoplot 100' 'street address'" type="text" class="form-control form-control-sm">
+                </form>
+            </div>
+            
+            <div class="mobile-menu d-flex align-items-center">
+                <!-- Utility toggler removed per design: keep only primary-nav toggler -->
+                <button type="button" class="navbar-toggler p-1 ms-2" data-bs-toggle="collapse" data-bs-target="#navbar-menu-collapse" aria-controls="navbar-menu-collapse" aria-expanded="false" aria-label="Toggle primary navigation">
+                    <span class="navbar-toggler-icon"></span>
+                    <span class="visually-hidden">Primary navigation</span>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile site links (contact, disclaimer, apps) now unified target -->
+        <div class="collapse" id="mobile-nav-collapse">
+            <ul class="nav navbar-nav mobile-site-nav" aria-label="Utility navigation links">
+                <li class="nav-item"><a class="nav-link" href="/info/contacts.php">contact us</a></li>
+                <li class="nav-item"><a class="nav-link" href="/disclaimer.php">disclaimer</a></li>
+                <li class="nav-item"><a class="nav-link" href="/apps.php">apps</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Desktop navbar: ISU wordmark on left, search and links stacked on right -->
+<nav class="navbar-site d-none d-lg-block" aria-label="Utility navigation">
+    <div class="container">
+        <div class="desktop-navbar-row">
+            <div class="desktop-wordmark">
+                <a href="/" title="Home" class="wordmark-unit">
+                    <span class="wordmark-isu">Iowa State University</span>
+                    <span class="wordmark-unit-title">Iowa Environmental Mesonet</span>
+                </a>
+            </div>
+            
+            <div class="desktop-right">
+                <div class="desktop-search">
+                    <form action="/search" method="GET" role="search">
+                        <input name="q" aria-label="Search" title="Search" placeholder="Search 'DSM' 'autoplot 100' 'street address'" type="text" class="form-control">
+                    </form>
+                </div>
+                
+                <div class="desktop-links">
+                    <ul class="nav navbar-nav">
+                        <li class="nav-item"><a class="nav-link" href="/info/contacts.php">contact us</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/disclaimer.php">disclaimer</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/apps.php">apps</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+</header>
+
+<!-- Main navigation menu navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom" aria-label="Primary navigation">
+    <div class="container">
+        <!-- Desktop IEM logo (visible in main nav on desktop) -->
+        <div class="d-none d-lg-block">
+            <a href="/"><img style="height: 50px;" alt="IEM" class="img-fluid float-start" src="/images/logo_small.png" /></a>
+        </div>
+        
+    <!-- Main navigation menu (collapsible on mobile) -->
+    <div class="navbar-collapse collapse" id="navbar-menu-collapse">
+            <ul class="nav navbar-nav">
+        
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" 
+    href="#" aria-label="Home resources menu"> <i class="bi bi-house-fill" aria-hidden="true"></i><span class="visually-hidden">Home resources</span> </a>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="/projects/iao/">Iowa Atmospheric Observatory</a></li>
+        <li><a class="dropdown-item" href="/">Iowa Environmental Mesonet</a></li>
+        <li><a class="dropdown-item" href="https://cocorahs.org">CoCoRaHS</a></li>
+        <li><a class="dropdown-item" href="https://dailyerosion.org">Daily Erosion Project</a></li>
+        <li><a class="dropdown-item" href="https://weather.im">Weather.IM Project</a></li>
+    </ul></li>
+        
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">Apps</a>
+<ul class="dropdown-menu">
+<li><a class="dropdown-item" href="/apps.php">Application Index</a></li>
+<li><a class="dropdown-item" href="/plotting/auto/">Automated Data Plotting</a></li>
+<li><a class="dropdown-item" href="/climodat/">Climodat</a></li>
+<li><a class="dropdown-item" href="/climodat/monitor.php">Climodat Monitor</a></li>
+<li><a class="dropdown-item" href="/explorer/">IEM Explorer</a></li>
+<li><a class="dropdown-item" href="/rainfall/obhour.phtml">Hourly Precip</a></li>
+<li><a class="dropdown-item" href="/GIS/apps/rview/warnings.phtml">Interactive Radar</a></li>
+<li><a class="dropdown-item" href="/topics/pests/">Pest Maps + Forecasting</a></li>
+<li><a class="dropdown-item" href="/my/current.phtml">Sortable Currents</a></li>
+<li><a class="dropdown-item" href="/timemachine/">Time Machine</a></li>
+<li><a class="dropdown-item" href="/sites/windrose.phtml?station=AMW&network=IA_ASOS">Wind Roses</a></li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">Areas</a>
+<ul class="dropdown-menu">
+<li><a class="dropdown-item" href="/agweather/">Ag Weather/Climate Info</a></li>
+<li><a class="dropdown-item" href="/archive/">Archive Mainpage</a></li>
+<li><a class="dropdown-item" href="/climate/">Climate Mainpage</a></li>
+<li><a class="dropdown-item" href="/current/">Current Mainpage</a></li>
+<li><a class="dropdown-item" href="/dm/">Drought</a></li>
+<li><a class="dropdown-item" href="/GIS/">GIS Mainpage</a></li>
+<li><a class="dropdown-item" href="/nws/">NWS Mainpage</a></li>
+<li><a class="dropdown-item" href="/current/severe.phtml">Severe Weather Mainpage</a></li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">Datasets</a>
+<ul class="dropdown-menu">
+<li><a class="dropdown-item" href="/COOP/extremes.php">Daily Climatology</a></li>
+<li><a class="dropdown-item" href="/request/daily.phtml">Daily Observations</a></li>
+<li><a class="dropdown-item" href="/info/datasets/">Dataset Documentation</a></li>
+<li><a class="dropdown-item" href="/iemre/">IEM Reanalysis</a></li>
+<li><a class="dropdown-item" href="/mos/">Model Output Statistics</a></li>
+<li><a class="dropdown-item" href="/docs/nexrad_mosaic/">NEXRAD Mosaic</a></li>
+<li><a class="dropdown-item" href="/request/gis/pireps.php">PIREP - Pilot Reports</a></li>
+<li><a class="dropdown-item" href="/roads/">Roads Mainpage</a></li>
+<li><a class="dropdown-item" href="/current/radar.phtml">RADAR & Satellite</a></li>
+<li><a class="dropdown-item" href="/rainfall/">Rainfall Data</a></li>
+<li><a class="dropdown-item" href="/archive/raob/">Sounding Archive</a></li>
+<li><a class="dropdown-item" href="/smos/">Soil Moisture Satellite</a></li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">Info</a>
+<ul class="dropdown-menu">
+<li><a class="dropdown-item" href="/info.php">Info Mainpage</a></li>
+<li><a class="dropdown-item" href="/onsite/features/past.php">Daily Features</a></li>
+<li><a class="dropdown-item" href="/info/links.php">Links</a></li>
+<li><a class="dropdown-item" href="/onsite/news.phtml">News</a></li>
+<li><a class="dropdown-item" href="/present/">Presentations</a></li>
+<li><a class="dropdown-item" href="/info/refs.php">Referenced By</a></li>
+<li><a class="dropdown-item" href="/sites/locate.php">Station Data and Metadata</a></li>
+<li><a class="dropdown-item" href="/QC/">Quality Control</a></li>
+<li><a class="dropdown-item" href="/info/variables.phtml">Variables</a></li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">Networks</a>
+<ul class="dropdown-menu">
+<li><a class="dropdown-item" href="/sites/networks.php">Network Tables</a></li>
+<li><a class="dropdown-item" href="/ASOS/">ASOS/AWOS Airports</a></li>
+<li><a class="dropdown-item" href="/cocorahs/">CoCoRaHS - Citizen Science</a></li>
+<li><a class="dropdown-item" href="/DCP/">DCP/HADS/SHEF - Hydrological</a></li>
+<li><a class="dropdown-item" href="/COOP/">NWS COOP - Daily Climate</a></li>
+<li><a class="dropdown-item" href="/agclimate/">ISU Soil Moisture</a></li>
+<li><a class="dropdown-item" href="/nstl_flux/">NLAE Flux</a></li>
+<li><a class="dropdown-item" href="/RWIS/">RWIS - Roadway Weather</a></li>
+<li><a class="dropdown-item" href="/scan/">SCAN - NRCS Soil Climate</a></li>
+<li><a class="dropdown-item" href="/other/">Other</a></li>
+<li><a class="dropdown-item" href="/uscrn/">US Climate Reference</a></li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">NWS Data</a>
+<ul class="dropdown-menu">
+<li><a class="dropdown-item" href="/nws/">NWS Mainpage</a></li>
+<li><a class="dropdown-item" href="/lsr/">Local Storm Report App</a></li>
+<li><a class="dropdown-item" href="/cow/">IEM Cow (SBW Verification)</a></li>
+<li><a class="dropdown-item" href="/raccoon/">IEM Raccoon (SBW Powerpoints)</a></li>
+<li><a class="dropdown-item" href="/river/">River Summary</a></li>
+<li><a class="dropdown-item" href="/GIS/goes.phtml">Satellite Data</a></li>
+<li><a class="dropdown-item" href="/vtec/search.php">Search for Warnings</a></li>
+<li><a class="dropdown-item" href="/nws/sps_search/">Special Weather Statement (SPS) Search</a></li>
+<li><a class="dropdown-item" href="/nws/spc_outlook_search/">SPC Convective Outlook / MCD Search</a></li>
+<li><a class="dropdown-item" href="/GIS/apps/rview/watch.phtml">SPC Watches</a></li>
+<li><a class="dropdown-item" href="/nws/text.php">Text Archives Mainpage</a></li>
+<li><a class="dropdown-item" href="/wx/afos/list.phtml">Text Listing by WFO/Center/Product</a></li>
+<li><a class="dropdown-item" href="/wx/afos/">Text by Product ID</a></li>
+<li><a class="dropdown-item" href="/vtec/">VTEC Browser</a></li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">Services</a>
+<ul class="dropdown-menu">
+<li><a class="dropdown-item" href="/api/">API Mainpage</a></li>
+<li><a class="dropdown-item" href="/api/#cgi">CGI / Bulk Data</a></li>
+<li><a class="dropdown-item" href="/request/grx/">Gibson Ridge Placefiles</a></li>
+<li><a class="dropdown-item" href="/projects/iembot/">iembot</a></li>
+<li><a class="dropdown-item" href="/api/#json">JSON Webservices</a></li>
+<li><a class="dropdown-item" href="/request/ldm.php">LDM</a></li>
+<li><a class="dropdown-item" href="/request/maxcsv.py?help">Max CSV</a></li>
+<li><a class="dropdown-item" href="/ogc/">OGC Webservices</a></li>
+<li><a class="dropdown-item" href="/GIS/radmap_api.phtml">RadMap API</a></li>
+<li><a class="dropdown-item" href="/GIS/radview.phtml">RADAR Services</a></li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">Webcams</a>
+<ul class="dropdown-menu">
+<li><a class="dropdown-item" href="/projects/webcam.php">Webcam mainpage</a></li>
+<li><a class="dropdown-item" href="/current/bloop.phtml">Build your own lapses</a></li>
+<li><a class="dropdown-item" href="/cool/">Cool lapses</a></li>
+<li><a class="dropdown-item" href="/current/viewer.phtml">IEM Webcam Viewer</a></li>
+<li><a class="dropdown-item" href="/current/isucams.phtml">ISU Campus Webcams</a></li>
+<li><a class="dropdown-item" href="/current/camlapse/">Recent lapses</a></li>
+<li><a class="dropdown-item" href="/current/webcam.php">Still images</a></li>
+</ul>
+</li>
+</ul>
+        </div>
+    </div>
+</nav><main role="main" id="main-content">
+<div class="container-fluid">
+<ol class="breadcrumb">
+ <li><a href="/ASOS/">ASOS Mainpage</a></li>
+ <li class="active">Download ASOS 1 minute interval data</li>
+</ol>
+
+<p>Each month, the National Climatic Data Center provides 
+<a href="ftp://ftp.ncdc.noaa.gov/pub/data/asos-onemin/">an archive of one 
+minute interval data</a> from the ASOS sites in the United States.  Unfortunately, 
+the data format of this information is brutal to work with.  Fortunately for 
+you, the IEM <a href="https://github.com/akrherz/iem/blob/main/scripts/ingestors/asos_1minute/parse_ncei_asos1minute.py">processes this information</a> and provides it for download here. The
+archive is available up until:
+<strong>12 Nov 2025</strong>.  There is
+a different interface to download the <a href="/request/download.phtml">routine hourly</a>
+observations from this network and for sites over the entire globe.</p>
+
+<p><a class="btn btn-secondary" href="/cgi-bin/request/asos1min.py?help"><i class="bi bi-file-text" aria-hidden="true"></i> Backend Documentation</a> exists for those that
+wish to script against this service.</p>
+
+<form method="GET" action="/cgi-bin/request/asos1min.py" name="dl">
+<div class="form2url"></div>
+
+<div class="row">
+<div class="col-md-6">
+
+<p><h3>1. Select Station:</h3><br>
+<i>Select One or More or All stations in the network.</i><br>
+<br />
+<div id="iemss" data-network="ASOS1MIN" data-name="station" data-supports-all="0"></div>
+
+</div>
+<div class="col-md-6">
+
+<h3>2. Timezone of Observations:</h3>
+<i>The timestamps used in the downloaded files will be set in the
+timezone you specify.</i>
+<SELECT name="tz">
+    <option value="UTC">UTC Time</option>
+    <option value="America/New_York">Eastern Time</option>
+    <option value="America/Chicago">Central Time</option>
+    <option value="America/Denver">Mountain Time</option>
+    <option value="America/Los_Angeles">Pacific Time</option>
+    <option value="America/Anchorage">Alaska/Anchorage Time</option>
+</SELECT>
+
+<h3>3. Select Start/End Time:</h3><br>
+<i>This timestamp is in the timezone you selected above.</i>
+<table class="table table-sm">
+<thead>
+  <tr>
+    <td></td>
+    <th>Year</th><th>Month</th><th>Day</th>
+    <th>Hour</th><th>Minute</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <th>Start:</th>
+    <td><select name="year1"><option value="2000">2000</option><option value="2001">2001</option><option value="2002">2002</option><option value="2003">2003</option><option value="2004">2004</option><option value="2005">2005</option><option value="2006">2006</option><option value="2007">2007</option><option value="2008">2008</option><option value="2009">2009</option><option value="2010">2010</option><option value="2011">2011</option><option value="2012">2012</option><option value="2013">2013</option><option value="2014">2014</option><option value="2015">2015</option><option value="2016">2016</option><option value="2017">2017</option><option value="2018">2018</option><option value="2019">2019</option><option value="2020">2020</option><option value="2021">2021</option><option value="2022">2022</option><option value="2023">2023</option><option value="2024">2024</option><option value="2025" selected>2025</option></select></td><td><select name="month1"><option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option><option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option><option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option></select></td><td><select name="day1"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option></select></td>
+    <td><select name="hour1"><option value="0" selected>12 AM</option><option value="1">01 AM</option><option value="2">02 AM</option><option value="3">03 AM</option><option value="4">04 AM</option><option value="5">05 AM</option><option value="6">06 AM</option><option value="7">07 AM</option><option value="8">08 AM</option><option value="9">09 AM</option><option value="10">10 AM</option><option value="11">11 AM</option><option value="12">12 PM</option><option value="13">01 PM</option><option value="14">02 PM</option><option value="15">03 PM</option><option value="16">04 PM</option><option value="17">05 PM</option><option value="18">06 PM</option><option value="19">07 PM</option><option value="20">08 PM</option><option value="21">09 PM</option><option value="22">10 PM</option><option value="23">11 PM</option></select></td><td><select name="minute1"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option></select></td>
+  </tr>
+
+  <tr>
+    <th>End:</th>
+    <td><select name="year2"><option value="2000">2000</option><option value="2001">2001</option><option value="2002">2002</option><option value="2003">2003</option><option value="2004">2004</option><option value="2005">2005</option><option value="2006">2006</option><option value="2007">2007</option><option value="2008">2008</option><option value="2009">2009</option><option value="2010">2010</option><option value="2011">2011</option><option value="2012">2012</option><option value="2013">2013</option><option value="2014">2014</option><option value="2015">2015</option><option value="2016">2016</option><option value="2017">2017</option><option value="2018">2018</option><option value="2019">2019</option><option value="2020">2020</option><option value="2021">2021</option><option value="2022">2022</option><option value="2023">2023</option><option value="2024">2024</option><option value="2025" selected>2025</option></select></td><td><select name="month2"><option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option><option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option><option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option><option value="10">Oct</option><option value="11" selected>Nov</option><option value="12">Dec</option></select></td><td><select name="day2"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12" selected>12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option></select></td>
+    <td><select name="hour2"><option value="0" selected>12 AM</option><option value="1">01 AM</option><option value="2">02 AM</option><option value="3">03 AM</option><option value="4">04 AM</option><option value="5">05 AM</option><option value="6">06 AM</option><option value="7">07 AM</option><option value="8">08 AM</option><option value="9">09 AM</option><option value="10">10 AM</option><option value="11">11 AM</option><option value="12">12 PM</option><option value="13">01 PM</option><option value="14">02 PM</option><option value="15">03 PM</option><option value="16">04 PM</option><option value="17">05 PM</option><option value="18">06 PM</option><option value="19">07 PM</option><option value="20">08 PM</option><option value="21">09 PM</option><option value="22">10 PM</option><option value="23">11 PM</option></select></td><td><select name="minute2"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option></select></td>
+  </tr>
+</tbody>
+</table>
+
+<h3>4. Select Variables:</h3><br>
+<select size=5 name="vars" MULTIPLE>
+  <option value="tmpf">Air Temperature [F]</option>
+  <option value="dwpf">Dew Point Temperature [F]</option>
+  <option value="sknt">Wind Speed [knots]</option>
+  <option value="drct">Wind Direction</option>
+  <option value="gust_drct">5 sec gust Wind Direction</option>
+  <option value="gust_sknt">5 sec gust Wind Speed [knots]</option>
+  <option value="vis1_coeff">Visibility 1 Coefficient</option>
+  <option value="vis1_nd">Visibility 1 Night/Day</option>
+  <option value="vis2_coeff">Visibility 2 Coefficient</option>
+  <option value="vis2_nd">Visibility 2 Night/Day</option>
+  <option value="vis3_coeff">Visibility 3 Coefficient</option>
+  <option value="vis3_nd">Visibility 3 Night/Day</option>
+  <option value="ptype">Precip Type Code</option>
+  <option value="precip">1 minute precip [inches]</option>
+  <option value="pres1">Sensor 1 Station Pressure [inches]</option>
+  <option value="pres2">Sensor 2 Station Pressure [inches]</option>
+  <option value="pres3">Sensor 3 Station Pressure [inches]</option>
+</select>
+
+<h3>5. Data Sampling?</h3><br>
+<i>Data is potentially available every minute, but you don't have to download
+it at that frequency. This setting <b>does not bin</b> the values, but rather
+filters based on your interval of choice.</i>
+<select name="sample">
+<option value="1min">Every Minute
+<option value="5min">Every 5 Minutes
+<option value="10min">Every 10 Minutes
+<option value="20min">Every 20 Minutes
+<option value="1hour">Every Hour
+</select>
+
+<h3>6. How to view?</h3>
+
+<p>The "Plot in Chart" option was removed here due to its poor performance.
+Please try <a href="/plotting/auto/?q=211">Autoplot 211</a> instead.</p>
+
+<p><select name="what">
+  <option value="download">Download to Disk</option>
+  <option value="view">View on-line</option>
+</select></p>
+
+<h3>7. Data Delimitation:</h3><br>
+How shall the output values be seperated?
+<br>
+<select name="delim">
+    <option value="comma">Comma</option>
+    <option value="tab">Tab</option>
+</select>
+
+<h3>8. Include Station Latitude & Longitude values?</h3>
+<img src="/images/gisready.png"><br>
+<div class="story">
+ <select name="gis">
+   <option value="no">No
+   <option value="yes">Yes
+ </select>
+</div>
+
+<p><h3>Submit Form:</h3><br>
+<input type="submit" value="Process Data Request">
+<input type="reset">
+
+</div></div>
+
+</form>
+<h3>Publications Citing IEM Data (<a href="/info/refs.php">View All</a>)</h3>
+<p>These are the most recent 10 publications that have cited the usage of data
+from this page. This
+list is not exhaustive, so please <a href="/info/contacts.php">let us know</a>
+if you have a publication that should be added.</p>
+<ul><li>Wang, J., R. Rousseau, et al. 2025, Migrating Populus with climate change: Phenology, coppice management, cold spell susceptibility, leaf dynamics, and biomass production. Forest Ecosystems <a href="https://doi.org/10.1016/j.fecs.2025.100343">https://doi.org/10.1016/j.fecs.2025.100343</a></li><li>Haliczer, D. 2025, Synergizing Ground, Satellite and Numerical Weather Prediction Datasets to Derive Cloud Base Properties as Used in the Kain-Fritsch Convective Parameterization. University of Alabama Huntsville PhD Thesis <a href="https://proquest.com/docview/3192194521">https://proquest.com/docview/3192194521</a></li><li>Rabinovich, A., J. Sepic, et al. 2025, A Triple Jeopardy Flood Event: Coincident Arrival of the 2022 Tonga Tsunami with a Storm Surge and Meteotsunami on the East Coast of the United States. Bulletin of the American Meteorological Society. Volume 106, Issue 2 <a href="https://doi.org/10.1175/BAMS-D-24-0040.1">https://doi.org/10.1175/BAMS-D-24-0040.1</a></li><li>Haliczer, D. J. Mecikalski, et al. 2024, Use of Satellite, Surface Observations and Numerical Weather Prediction Model Data to Improve Cloud Base Height and Cloud Base Vertical Velocity Estimation. JGR: Atmospheres, 130, e2024JD04185 <a href="https://doi.org/10.1029/2024JD041853">https://doi.org/10.1029/2024JD041853</a></li><li>Kim, J., M. Amodeo, et al. 2023, Atlas of probabilistic extreme precipitation based on the early 21st century records in the United States. Journal of Hydrology: Regional Studies. Volume 48 <a href="https://doi.org/10.1016/j.ejrh.2023.101480">https://doi.org/10.1016/j.ejrh.2023.101480</a></li><li>Kim, J., M. Amodeo, et al. 2023, Atlas of probabilistic extreme precipitation based on the early 21st century records in the United States. Journal of Hydrology: Regional Studies Volume 48, 101480. <a href="https://doi.org/10.1016/j.ejrh.2023.101480">https://doi.org/10.1016/j.ejrh.2023.101480</a></li><li>Dogan, G., A. Yalciner, et al. 2023, Global propagation of air pressure waves and consequent ocean waves due to the January 2022 Hunga Tonga-Hunga Haapai eruption. Ocean Engineering. Volume 267. <a href="https://doi.org/10.1016/j.oceaneng.2022.113174">https://doi.org/10.1016/j.oceaneng.2022.113174</a></li><li>Kim, J., E. Shu, et al. 2022, Assessment of the standard precipitation frequency estimates in the United States. Journal of Hydrology: Regional Studies. Volume 44 <a href="https://doi.org/10.1016/j.ejrh.2022.101276">https://doi.org/10.1016/j.ejrh.2022.101276</a></li></ul></div><!--/.container-->
+</main>
+<footer>
+    <div class="container" id="iem-footer" aria-label="Site footer">
+        <div class="row">
+
+            <!-- footer-associates -->
+            <section class="footer-associates col-sm-12 col-md-3">
+                <ul>
+                    <li><a href="https://iastate.edu"><img src="/vendor/img/isu-stacked.svg" class="wordmark-isu" alt="Iowa State University"></a></li>
+                    <li><a href="https://www.ag.iastate.edu">College of Ag</a></li>
+                    <li><a href="https://www.agron.iastate.edu">Department of Agronomy</a></li>
+                </ul>
+            </section>
+
+            <!-- footer-contact -->
+            <section class="footer-contact col-sm-12 col-md-3" aria-labelledby="footer-contact-heading">
+                <h2 id="footer-contact-heading" class="visually-hidden">Contact</h2>
+                <address class="mb-2">
+                    <strong>Department of Agronomy</strong><br>
+                    <a href="https://maps.google.com/?q=716+Farm+House+Ln+Ames,+IA+50011">716 Farm House Ln<br>
+                    Ames, IA 50011</a>
+                </address>
+                <a href="mailto:akrherz@iastate.edu">akrherz@iastate.edu</a><br>
+            </section>
+
+            <!-- footer-social -->
+            <section class="footer-social col-sm-12 col-md-3" aria-labelledby="footer-social-heading">
+                <h2 id="footer-social-heading" class="visually-hidden">Social media</h2>
+                <ul class=" labeled">
+                <li><a href="https://www.facebook.com/IEM-157789644737/"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> Facebook</a></li>
+                <li><a href="https://x.com/akrherz"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> Twitter</a></li>
+                <li><a href="https://github.com/akrherz/iem"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> Github</a></li>
+                <li><a href="https://youtube.com/akrherz"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> YouTube</a></li>
+                <li><a href="/rss.php"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> RSS</a></li>
+                </ul>
+            </section>
+
+            <!-- footer-legal -->
+            <section class="footer-legal col-sm-12 col-md-3" aria-labelledby="footer-legal-heading">
+                <h2 id="footer-legal-heading" class="visually-hidden">Legal</h2>
+                <p>Copyright &copy; 2001-2025<br>
+                                Iowa State University<br>
+                                of Science and Technology<br>
+                                All rights reserved.</p>
+                <ul>
+                    <li><a href="https://www.policy.iastate.edu/policy/discrimination">Non-discrimination Policy</a></li>
+                    <li><a href="https://www.policy.iastate.edu/electronicprivacy">Privacy Policy</a></li>
+                    <li><a href="https://digitalaccess.iastate.edu">Digital Access &amp; Accessibility</a></li>
+                </ul>
+            </section>
+
+        </div>
+    </div>
+</footer>
+    <script src="/vendor/bootstrap/5.3.6/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/iastate-iem.js"></script>
+
+    <script src="/vendor/openlayers/10.7.0/ol.js"></script>
+<script src="/js/iemss.js?v=3"></script>
+<script type="module" src="/js/form2url.module.js"></script>  </body>
+</html>

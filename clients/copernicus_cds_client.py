@@ -65,7 +65,22 @@ class CopernicusCdsClient(BatchExecutorMixin):
         self.grid: Sequence[float] = provider_cfg.get("grid", [0.25, 0.25])
         self.batch_size: int = int(provider_cfg.get("batchSize", 1))
 
-        self.client = cdsapi.Client(url=self.api_url, key=self.api_key, quiet=True)
+        # Configure retry policy to avoid long blocking retries during failures.
+        # These can be overridden per provider in weather_config.json using
+        # keys: retryMax, sleepMax.
+        self.retry_max: int = int(provider_cfg.get("retryMax", 1))
+        self.sleep_max: float = float(provider_cfg.get("sleepMax", 5))
+
+        # cdsapi will dispatch to ecmwf.datastores LegacyClient for API keys
+        # without the deprecated UID: prefix. Passing retry controls keeps
+        # attempts to a minimum in error cases (e.g., 429).
+        self.client = cdsapi.Client(
+            url=self.api_url,
+            key=self.api_key,
+            quiet=True,
+            retry_max=self.retry_max,
+            sleep_max=self.sleep_max,
+        )
 
     def _load_config(self) -> dict:
         if not self.config_path.exists():
@@ -156,17 +171,17 @@ class CopernicusCdsClient(BatchExecutorMixin):
                 "format": self.format,
             }
         elif self.mode == "land_timeseries":
+            # ERA5-Land point time-series endpoint expects a date range and
+            # a point_selection object, plus data_format instead of format.
+            # See: api_docs/copernicus_era5_land_timeseries.json
             request = {
                 "variable": variables,
-                "start_year": start.year,
-                "start_month": start.month,
-                "start_day": start.day,
-                "end_year": end.year,
-                "end_month": end.month,
-                "end_day": end.day,
-                "latitude": float(latitude),
-                "longitude": float(longitude),
-                "format": self.format,
+                "date": f"{self._ensure_date(start)}/{self._ensure_date(end)}",
+                "point_selection": {
+                    "latitude": float(latitude),
+                    "longitude": float(longitude),
+                },
+                "data_format": self.format,
             }
         else:
             raise ConfigurationError(f"Unsupported Copernicus CDS mode '{self.mode}'.")

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Automated weather data exporter.
 
@@ -7,6 +7,8 @@ concurrently, persisting verbose logs, and looping with a cool down between runs
 """
 
 import datetime as dt
+import argparse
+import sys
 import json
 import logging
 import threading
@@ -67,20 +69,28 @@ USE_IEM_ASOS = False
 USE_COPERNICUS_ERA5_SINGLE = True
 USE_COPERNICUS_ERA5_LAND = True
 USE_COPERNICUS_ERA5_PRESSURE = True
-USE_COPERNICUS_ERA5_LAND_TS = False
+USE_COPERNICUS_ERA5_LAND_TS = True
 USE_OPENWEATHER = False
 USE_WEATHERBIT = False
 USE_WEATHERAPI_COM = False
+
+# Runtime overrides (set via CLI in main())
+SKIP_COVERAGE: bool = False
+PROVIDER_INCLUDE: Optional[set] = None  # if set, run only these providers
+LOCATION_LIMIT: Optional[int] = None
 
 # Ensure essential directories exist.
 DATA_ROOT.mkdir(exist_ok=True)
 LOG_DIR.mkdir(exist_ok=True)
 
-# Configure logging
+# Configure logging (file + console)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.FileHandler(LOG_FILE, encoding="utf-8")],
+    handlers=[
+        logging.FileHandler(LOG_FILE, encoding="utf-8"),
+        logging.StreamHandler(),
+    ],
     force=True,
 )
 
@@ -140,6 +150,89 @@ def iter_days(start: dt.date, end: dt.date) -> Iterable[dt.date]:
 
 LOCATION_ITEMS = load_locations()
 DAY_RANGE = list(iter_days(START_DATE, END_DATE))
+
+
+def _set_date_range(since: Optional[str], until: Optional[str]) -> None:
+    """Override global START_DATE/END_DATE and rebuild DAY_RANGE."""
+    global START_DATE, END_DATE, DAY_RANGE
+    if since:
+        START_DATE = dt.date.fromisoformat(since)
+    if until:
+        END_DATE = dt.date.fromisoformat(until)
+    if END_DATE < START_DATE:
+        raise ValueError("--until must be on/after --since")
+    DAY_RANGE = list(iter_days(START_DATE, END_DATE))
+
+
+def _apply_location_limit(limit: Optional[int]) -> None:
+    """Reload locations and apply an optional limit to reduce runtime."""
+    global LOCATION_ITEMS
+    LOCATION_ITEMS = load_locations()
+    if limit is not None and limit > 0:
+        LOCATION_ITEMS = LOCATION_ITEMS[:limit]
+
+
+def _rebuild_provider_flags() -> None:
+    """Rebuild PROVIDER_FLAGS from current USE_* globals."""
+    global PROVIDER_FLAGS
+    PROVIDER_FLAGS = {
+        "tomorrow_io": USE_TOMORROW_IO,
+        "open_meteo": USE_OPEN_METEO,
+        "visual_crossing": USE_VISUAL_CROSSING,
+        "noaa_isd": USE_NOAA_ISD,
+        "noaa_lcd": USE_NOAA_LCD,
+        "meteostat": USE_METEOSTAT,
+        "nasa_power": USE_NASA_POWER,
+        "iem_asos": USE_IEM_ASOS,
+        "copernicus_era5_single": USE_COPERNICUS_ERA5_SINGLE,
+        "copernicus_era5_land": USE_COPERNICUS_ERA5_LAND,
+        "copernicus_era5_pressure": USE_COPERNICUS_ERA5_PRESSURE,
+        "copernicus_era5_land_timeseries": USE_COPERNICUS_ERA5_LAND_TS,
+        "openweather": USE_OPENWEATHER,
+        "weatherbit": USE_WEATHERBIT,
+        "weatherapi_com": USE_WEATHERAPI_COM,
+    }
+
+
+def _force_enable_toggles(keys: Optional[set]) -> None:
+    """Force-enable provider toggle globals for any keys provided."""
+    if not keys:
+        return
+    global USE_TOMORROW_IO, USE_OPEN_METEO, USE_VISUAL_CROSSING, USE_NOAA_ISD, USE_NOAA_LCD
+    global USE_METEOSTAT, USE_NASA_POWER, USE_IEM_ASOS, USE_COPERNICUS_ERA5_SINGLE
+    global USE_COPERNICUS_ERA5_LAND, USE_COPERNICUS_ERA5_PRESSURE, USE_COPERNICUS_ERA5_LAND_TS
+    global USE_OPENWEATHER, USE_WEATHERBIT, USE_WEATHERAPI_COM
+
+    if "tomorrow_io" in keys:
+        USE_TOMORROW_IO = True
+    if "open_meteo" in keys:
+        USE_OPEN_METEO = True
+    if "visual_crossing" in keys:
+        USE_VISUAL_CROSSING = True
+    if "noaa_isd" in keys:
+        USE_NOAA_ISD = True
+    if "noaa_lcd" in keys:
+        USE_NOAA_LCD = True
+    if "meteostat" in keys:
+        USE_METEOSTAT = True
+    if "nasa_power" in keys:
+        USE_NASA_POWER = True
+    if "iem_asos" in keys:
+        USE_IEM_ASOS = True
+    if "copernicus_era5_single" in keys:
+        USE_COPERNICUS_ERA5_SINGLE = True
+    if "copernicus_era5_land" in keys:
+        USE_COPERNICUS_ERA5_LAND = True
+    if "copernicus_era5_pressure" in keys:
+        USE_COPERNICUS_ERA5_PRESSURE = True
+    if "copernicus_era5_land_timeseries" in keys:
+        USE_COPERNICUS_ERA5_LAND_TS = True
+    if "openweather" in keys:
+        USE_OPENWEATHER = True
+    if "weatherbit" in keys:
+        USE_WEATHERBIT = True
+    if "weatherapi_com" in keys:
+        USE_WEATHERAPI_COM = True
 UTC = dt.timezone.utc
 
 
@@ -153,6 +246,30 @@ def summarise_results(provider_key: str, saved: int, skipped: int, errors: int) 
 def compute_flush_threshold(batch_limit: int) -> int:
     """Clamp buffered batch size to avoid overwhelming downstream APIs."""
     return max(1, min(batch_limit, MAX_PENDING_REQUESTS_PER_FLUSH))
+
+
+def _iter_date_windows(start: dt.date, end: dt.date, window_days: int) -> Iterable[Tuple[dt.date, dt.date]]:
+    if window_days <= 0:
+        window_days = 1
+    cur = start
+    while cur <= end:
+        wnd_end = min(end, cur + dt.timedelta(days=window_days - 1))
+        yield cur, wnd_end
+        cur = wnd_end + dt.timedelta(days=1)
+
+
+def _provider_max_days(provider_key: str, fallback: int) -> int:
+    """Read maxDaysPerRequest from weather_config.json with a safe fallback."""
+    try:
+        cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+        providers = cfg.get("providers", {})
+        raw = providers.get(provider_key, {}).get("maxDaysPerRequest")
+        if raw is None:
+            return fallback
+        days = int(raw)
+        return max(1, days)
+    except Exception:
+        return max(1, fallback)
 
 
 # ---------------------------------------------------------------------------
@@ -369,78 +486,80 @@ def export_open_meteo() -> str:
             location_dir = provider_dir / location_key
             location_dir.mkdir(parents=True, exist_ok=True)
 
-            historical_days: List[dt.date] = []
-            historical_requests: List[Dict[str, object]] = []
-            forecast_days: List[dt.date] = []
-            forecast_requests: List[Dict[str, object]] = []
-            batch_limit = getattr(client, "batch_size", 50) or 50
-            flush_threshold = compute_flush_threshold(batch_limit)
+            # 1) Historical: fetch missing days in contiguous spans using range API
+            def _om_fetch(params: Dict[str, object]) -> dict:
+                s: dt.date = params["start"]  # type: ignore[index]
+                e: dt.date = params["end"]  # type: ignore[index]
+                return client.get_historical(
+                    location=(lat, lon), start_date=s, end_date=e, hourly=hourly, timezone="UTC"
+                )
 
-            def _flush_requests(
-                day_buffer: List[dt.date],
-                request_buffer: List[Dict[str, object]],
-                fetch_fn,
-                label: str,
-            ) -> None:
-                nonlocal saved, skipped, errors
-                if not request_buffer:
-                    return
-                call_count = len(request_buffer)
-                progress.add_expected(call_count)
-                try:
-                    payloads = fetch_fn(list(request_buffer))
-                except Exception:
-                    progress.complete(call_count)
-                    raise
-                progress.complete(call_count)
-                for req_day, payload in zip(day_buffer, payloads):
-                    output_path = location_dir / f"{req_day.isoformat()}.csv"
-                    if isinstance(payload, Exception):
-                        errors += 1
-                        logging.warning("%s %s failed for %s: %s", prefix, label, req_day, payload)
-                        continue
+            def _om_handle(payload: dict, s: dt.date, e: dt.date) -> Tuple[int, int, int]:
+                _saved = _skipped = _errors = 0
+                for offset in range(_date_span_days(s, e)):
+                    day = s + dt.timedelta(days=offset)
+                    output_path = location_dir / f"{day.isoformat()}.csv"
                     try:
-                        df_day = _payload_to_df(payload, req_day)
+                        df_day = _payload_to_df(payload, day)
                         if df_day.empty:
-                            logging.info("%s no %s data for %s", prefix, label, req_day)
-                            skipped += 1
+                            logging.info("%s no historical data for %s", prefix, day)
+                            _skipped += 1
                             continue
                         df_day.to_csv(output_path, index=False)
-                        saved += 1
+                        _saved += 1
                         logging.info("%s wrote %s", prefix, output_path)
                     except Exception as exc:  # pylint: disable=broad-except
-                        errors += 1
-                        logging.exception("%s unexpected %s error for %s: %s", prefix, label, req_day, exc)
-                day_buffer.clear()
-                request_buffer.clear()
+                        _errors += 1
+                        logging.exception("%s unexpected historical error for %s: %s", prefix, day, exc)
+                return _saved, _skipped, _errors
 
+            spans = _group_missing_day_spans(location_dir)
+            for s, e in spans:
+                if e < today:
+                    # Open-Meteo: window size is configurable
+                    window_days = _provider_max_days('open_meteo', 30)
+                    for ws, we in _iter_date_windows(s, e, window_days):
+                        _fetch_range_recursive(
+                            start=ws,
+                            end=we,
+                            fetch_fn=_om_fetch,
+                            request_kwargs={},
+                            handle_payload=_om_handle,
+                            progress=progress,
+                        )
+
+            # 2) Forecast/near-present: fetch day-by-day using forecast endpoint
             for day in DAY_RANGE:
+                if day < today:
+                    continue
                 output_path = location_dir / f"{day.isoformat()}.csv"
                 if day != today and output_path.exists():
                     logging.debug("%s skipping %s (already exported).", prefix, day)
                     skipped += 1
                     continue
-
-                request = {
-                    "location": (lat, lon),
-                    "start_date": day,
-                    "end_date": day,
-                    "hourly": hourly,
-                    "timezone": "UTC",
-                }
-                if day < today:
-                    historical_days.append(day)
-                    historical_requests.append(dict(request))
-                    if len(historical_requests) >= flush_threshold:
-                        _flush_requests(historical_days, historical_requests, client.get_historical_batch, "historical")
-                else:
-                    forecast_days.append(day)
-                    forecast_requests.append(dict(request))
-                    if len(forecast_requests) >= flush_threshold:
-                        _flush_requests(forecast_days, forecast_requests, client.get_forecast_batch, "forecast")
-
-            _flush_requests(historical_days, historical_requests, client.get_historical_batch, "historical")
-            _flush_requests(forecast_days, forecast_requests, client.get_forecast_batch, "forecast")
+                try:
+                    progress.add_expected(1)
+                    payload = client.get_forecast(
+                        location=(lat, lon), start_date=day, end_date=day, hourly=hourly, timezone="UTC"
+                    )
+                    progress.complete(1)
+                except Exception as exc:
+                    progress.complete(1)
+                    errors += 1
+                    logging.warning("%s forecast request failed for %s: %s", prefix, day, exc)
+                    continue
+                try:
+                    df_day = _payload_to_df(payload, day)
+                    if df_day.empty:
+                        logging.info("%s no forecast data for %s", prefix, day)
+                        skipped += 1
+                        continue
+                    df_day.to_csv(output_path, index=False)
+                    saved += 1
+                    logging.info("%s wrote %s", prefix, output_path)
+                except Exception as exc:  # pylint: disable=broad-except
+                    errors += 1
+                    logging.exception("%s unexpected forecast error for %s: %s", prefix, day, exc)
 
     return summarise_results("open_meteo", saved, skipped, errors)
 
@@ -492,8 +611,48 @@ def export_visual_crossing() -> str:
             location_dir = provider_dir / location_key
             location_dir.mkdir(parents=True, exist_ok=True)
 
-            historical_days: List[dt.date] = []
-            historical_requests: List[Dict[str, object]] = []
+            # Historical in contiguous spans via timeline API
+            def _vc_fetch(params: Dict[str, object]) -> dict:
+                s: dt.date = params["start"]  # type: ignore[index]
+                e: dt.date = params["end"]  # type: ignore[index]
+                return client.get_historical(
+                    location=f"{lat},{lon}", start=s, end=e, include=["hours"], unit_group="metric"
+                )
+
+            def _vc_handle(payload: dict, s: dt.date, e: dt.date) -> Tuple[int, int, int]:
+                _saved = _skipped = _errors = 0
+                for offset in range(_date_span_days(s, e)):
+                    day = s + dt.timedelta(days=offset)
+                    output_path = location_dir / f"{day.isoformat()}.csv"
+                    try:
+                        df_day = _payload_to_df(payload, day)
+                        if df_day.empty:
+                            logging.info("%s no historical data for %s", prefix, day)
+                            _skipped += 1
+                            continue
+                        df_day.to_csv(output_path, index=False)
+                        _saved += 1
+                        logging.info("%s wrote %s", prefix, output_path)
+                    except Exception as exc:  # pylint: disable=broad-except
+                        _errors += 1
+                        logging.exception("%s unexpected historical error for %s: %s", prefix, day, exc)
+                return _saved, _skipped, _errors
+
+            spans = _group_missing_day_spans(location_dir)
+            for s, e in spans:
+                if e < today:
+                    window_days = _provider_max_days('visual_crossing', 30)
+                    for ws, we in _iter_date_windows(s, e, window_days):
+                        _fetch_range_recursive(
+                            start=ws,
+                            end=we,
+                            fetch_fn=_vc_fetch,
+                            request_kwargs={},
+                            handle_payload=_vc_handle,
+                            progress=progress,
+                        )
+
+            # Forecast path: keep per-day to respect forecast constraints
             forecast_days: List[dt.date] = []
             forecast_requests: List[Dict[str, object]] = []
             batch_limit = getattr(client, "batch_size", 50) or 50
@@ -650,59 +809,48 @@ def export_noaa_isd() -> str:
             location_dir = provider_dir / location_key
             location_dir.mkdir(parents=True, exist_ok=True)
 
-            request_days: List[dt.date] = []
-            request_payloads: List[Dict[str, object]] = []
-            batch_limit = getattr(client, "batch_size", 50) or 50
-            flush_threshold = compute_flush_threshold(batch_limit)
+            def _isd_fetch(params: Dict[str, object]) -> List[dict]:
+                s: dt.date = params["start"]  # type: ignore[index]
+                e: dt.date = params["end"]  # type: ignore[index]
+                return client.get_observations(
+                    station_id=station_id,
+                    start_time=dt.datetime.combine(s, dt.time(0, 0), tzinfo=UTC),
+                    end_time=dt.datetime.combine(e + dt.timedelta(days=1), dt.time(0, 0), tzinfo=UTC),
+                )
 
-            def _flush_requests() -> None:
-                nonlocal saved, skipped, errors
-                if not request_payloads:
-                    return
-                call_count = len(request_payloads)
-                progress.add_expected(call_count)
-                try:
-                    payloads = client.get_observations_batch(list(request_payloads))
-                except Exception:
-                    progress.complete(call_count)
-                    raise
-                progress.complete(call_count)
-                for req_day, payload in zip(request_days, payloads):
-                    output_path = location_dir / f"{req_day.isoformat()}.csv"
-                    if isinstance(payload, Exception):
-                        errors += 1
-                        logging.warning("%s request failed for %s: %s", prefix, req_day, payload)
-                        continue
+            def _isd_handle(payload: List[dict], s: dt.date, e: dt.date) -> Tuple[int, int, int]:
+                _saved = _skipped = _errors = 0
+                for offset in range(_date_span_days(s, e)):
+                    day = s + dt.timedelta(days=offset)
+                    output_path = location_dir / f"{day.isoformat()}.csv"
                     try:
-                        df_day = _payload_to_df(payload, req_day)
+                        df_day = _payload_to_df(payload, day)
                         if df_day.empty:
-                            logging.info("%s no data for %s", prefix, req_day)
-                            skipped += 1
+                            logging.info("%s no data for %s", prefix, day)
+                            _skipped += 1
                             continue
                         df_day.to_csv(output_path, index=False)
-                        saved += 1
+                        _saved += 1
                         logging.info("%s wrote %s", prefix, output_path)
                     except Exception as exc:  # pylint: disable=broad-except
-                        errors += 1
-                        logging.exception("%s unexpected error for %s: %s", prefix, req_day, exc)
-                request_days.clear()
-                request_payloads.clear()
+                        _errors += 1
+                        logging.exception("%s unexpected error for %s: %s", prefix, day, exc)
+                return _saved, _skipped, _errors
 
-            for day in DAY_RANGE:
-                if day > today:
-                    skipped += 1
+            spans = _group_missing_day_spans(location_dir)
+            for s, e in spans:
+                if s > today:
                     continue
-                output_path = location_dir / f"{day.isoformat()}.csv"
-                if day != today and output_path.exists():
-                    skipped += 1
-                    continue
-                start = dt.datetime.combine(day, dt.time(0, 0), tzinfo=UTC)
-                end = start + dt.timedelta(days=1)
-                request_payloads.append({"station_id": station_id, "start_time": start, "end_time": end})
-                request_days.append(day)
-                if len(request_payloads) >= flush_threshold:
-                    _flush_requests()
-            _flush_requests()
+                window_days = _provider_max_days('noaa_isd', 7)
+                for ws, we in _iter_date_windows(s, min(e, today), window_days):
+                    _fetch_range_recursive(
+                        start=ws,
+                        end=we,
+                        fetch_fn=_isd_fetch,
+                        request_kwargs={},
+                        handle_payload=_isd_handle,
+                        progress=progress,
+                    )
 
     return summarise_results("noaa_isd", saved, skipped, errors)
 
@@ -789,59 +937,48 @@ def export_noaa_lcd() -> str:
             location_dir = provider_dir / location_key
             location_dir.mkdir(parents=True, exist_ok=True)
 
-            request_days: List[dt.date] = []
-            request_payloads: List[Dict[str, object]] = []
-            batch_limit = getattr(client, "batch_size", 50) or 50
-            flush_threshold = compute_flush_threshold(batch_limit)
+            def _lcd_fetch(params: Dict[str, object]) -> List[dict]:
+                s: dt.date = params["start"]  # type: ignore[index]
+                e: dt.date = params["end"]  # type: ignore[index]
+                return client.get_observations(
+                    station_id=station_id,
+                    start_time=dt.datetime.combine(s, dt.time(0, 0), tzinfo=UTC),
+                    end_time=dt.datetime.combine(e + dt.timedelta(days=1), dt.time(0, 0), tzinfo=UTC),
+                )
 
-            def _flush_requests() -> None:
-                nonlocal saved, skipped, errors
-                if not request_payloads:
-                    return
-                call_count = len(request_payloads)
-                progress.add_expected(call_count)
-                try:
-                    payloads = client.get_observations_batch(list(request_payloads))
-                except Exception:
-                    progress.complete(call_count)
-                    raise
-                progress.complete(call_count)
-                for req_day, payload in zip(request_days, payloads):
-                    output_path = location_dir / f"{req_day.isoformat()}.csv"
-                    if isinstance(payload, Exception):
-                        errors += 1
-                        logging.warning("%s request failed for %s: %s", prefix, req_day, payload)
-                        continue
+            def _lcd_handle(payload: List[dict], s: dt.date, e: dt.date) -> Tuple[int, int, int]:
+                _saved = _skipped = _errors = 0
+                for offset in range(_date_span_days(s, e)):
+                    day = s + dt.timedelta(days=offset)
+                    output_path = location_dir / f"{day.isoformat()}.csv"
                     try:
-                        df_day = _payload_to_df(payload, req_day)
+                        df_day = _payload_to_df(payload, day)
                         if df_day.empty:
-                            logging.info("%s no data for %s", prefix, req_day)
-                            skipped += 1
+                            logging.info("%s no data for %s", prefix, day)
+                            _skipped += 1
                             continue
                         df_day.to_csv(output_path, index=False)
-                        saved += 1
+                        _saved += 1
                         logging.info("%s wrote %s", prefix, output_path)
                     except Exception as exc:  # pylint: disable=broad-except
-                        errors += 1
-                        logging.exception("%s unexpected error for %s: %s", prefix, req_day, exc)
-                request_days.clear()
-                request_payloads.clear()
+                        _errors += 1
+                        logging.exception("%s unexpected error for %s: %s", prefix, day, exc)
+                return _saved, _skipped, _errors
 
-            for day in DAY_RANGE:
-                if day > today:
-                    skipped += 1
+            spans = _group_missing_day_spans(location_dir)
+            for s, e in spans:
+                if s > today:
                     continue
-                output_path = location_dir / f"{day.isoformat()}.csv"
-                if day != today and output_path.exists():
-                    skipped += 1
-                    continue
-                start = dt.datetime.combine(day, dt.time(0, 0), tzinfo=UTC)
-                end = start + dt.timedelta(days=1)
-                request_payloads.append({"station_id": station_id, "start_time": start, "end_time": end})
-                request_days.append(day)
-                if len(request_payloads) >= flush_threshold:
-                    _flush_requests()
-            _flush_requests()
+                window_days = _provider_max_days('noaa_lcd', 31)
+                for ws, we in _iter_date_windows(s, min(e, today), window_days):
+                    _fetch_range_recursive(
+                        start=ws,
+                        end=we,
+                        fetch_fn=_lcd_fetch,
+                        request_kwargs={},
+                        handle_payload=_lcd_handle,
+                        progress=progress,
+                    )
 
     return summarise_results("noaa_lcd", saved, skipped, errors)
 
@@ -895,65 +1032,43 @@ def export_meteostat() -> str:
             location_dir = provider_dir / location_key
             location_dir.mkdir(parents=True, exist_ok=True)
 
-            request_days: List[dt.date] = []
-            request_payloads: List[Dict[str, object]] = []
-            batch_limit = getattr(client, "batch_size", 50) or 50
-            flush_threshold = compute_flush_threshold(batch_limit)
+            def _ms_fetch(params: Dict[str, object]) -> List[dict]:
+                s: dt.date = params["start"]  # type: ignore[index]
+                e: dt.date = params["end"]  # type: ignore[index]
+                return client.get_hourly(location=(lat, lon), start_time=s, end_time=e)
 
-            def _flush_requests() -> None:
-                nonlocal saved, skipped, errors
-                if not request_payloads:
-                    return
-                call_count = len(request_payloads)
-                progress.add_expected(call_count)
-                try:
-                    payloads = client.get_hourly_batch(list(request_payloads))
-                except Exception:
-                    progress.complete(call_count)
-                    raise
-                progress.complete(call_count)
-                for req_day, payload in zip(request_days, payloads):
-                    output_path = location_dir / f"{req_day.isoformat()}.csv"
-                    if isinstance(payload, Exception):
-                        errors += 1
-                        logging.warning("%s request failed for %s: %s", prefix, req_day, payload)
-                        continue
+            def _ms_handle(payload: List[dict], s: dt.date, e: dt.date) -> Tuple[int, int, int]:
+                _saved = _skipped = _errors = 0
+                for offset in range(_date_span_days(s, e)):
+                    day = s + dt.timedelta(days=offset)
+                    output_path = location_dir / f"{day.isoformat()}.csv"
                     try:
-                        df_day = _payload_to_df(payload, req_day)
+                        df_day = _payload_to_df(payload, day)
                         if df_day.empty:
-                            logging.info("%s no Meteostat data for %s", prefix, req_day)
-                            skipped += 1
+                            logging.info("%s no data for %s", prefix, day)
+                            _skipped += 1
                             continue
                         df_day.to_csv(output_path, index=False)
-                        saved += 1
+                        _saved += 1
                         logging.info("%s wrote %s", prefix, output_path)
                     except Exception as exc:  # pylint: disable=broad-except
-                        errors += 1
-                        logging.exception("%s unexpected Meteostat error for %s: %s", prefix, req_day, exc)
-                request_days.clear()
-                request_payloads.clear()
+                        _errors += 1
+                        logging.exception("%s unexpected error for %s: %s", prefix, day, exc)
+                return _saved, _skipped, _errors
 
-            for day in DAY_RANGE:
-                if day > today:
-                    skipped += 1
-                    continue
-                output_path = location_dir / f"{day.isoformat()}.csv"
-                if day != today and output_path.exists():
-                    skipped += 1
-                    continue
-                start = dt.datetime.combine(day, dt.time(0, 0))
-                end = start + dt.timedelta(days=1)
-                request_payloads.append(
-                    {
-                        "location": (lat, lon),
-                        "start_time": start,
-                        "end_time": end,
-                    }
-                )
-                request_days.append(day)
-                if len(request_payloads) >= flush_threshold:
-                    _flush_requests()
-            _flush_requests()
+            spans = _group_missing_day_spans(location_dir)
+            for s, e in spans:
+                if e <= today:
+                    window_days = _provider_max_days('meteostat', 31)
+                    for ws, we in _iter_date_windows(s, e, window_days):
+                        _fetch_range_recursive(
+                            start=ws,
+                            end=we,
+                            fetch_fn=_ms_fetch,
+                            request_kwargs={},
+                            handle_payload=_ms_handle,
+                            progress=progress,
+                        )
 
     return summarise_results("meteostat", saved, skipped, errors)
 
@@ -1022,63 +1137,44 @@ def export_nasa_power() -> str:
             location_dir = provider_dir / location_key
             location_dir.mkdir(parents=True, exist_ok=True)
 
-            request_days: List[dt.date] = []
-            request_payloads: List[Dict[str, object]] = []
-            batch_limit = getattr(client, "batch_size", 25) or 25
-            flush_threshold = compute_flush_threshold(batch_limit)
+            def _np_fetch(params: Dict[str, object]) -> dict:
+                s: dt.date = params["start"]  # type: ignore[index]
+                e: dt.date = params["end"]  # type: ignore[index]
+                return client.get_hourly(location=(lat, lon), start_time=s, end_time=e)
 
-            def _flush_requests() -> None:
-                nonlocal saved, skipped, errors
-                if not request_payloads:
-                    return
-                call_count = len(request_payloads)
-                progress.add_expected(call_count)
-                try:
-                    payloads = client.get_hourly_batch(list(request_payloads))
-                except Exception:
-                    progress.complete(call_count)
-                    raise
-                progress.complete(call_count)
-                for req_day, payload in zip(request_days, payloads):
-                    output_path = location_dir / f"{req_day.isoformat()}.csv"
-                    if isinstance(payload, Exception):
-                        errors += 1
-                        logging.warning("%s request failed for %s: %s", prefix, req_day, payload)
-                        continue
+            def _np_handle(payload: dict, s: dt.date, e: dt.date) -> Tuple[int, int, int]:
+                _saved = _skipped = _errors = 0
+                for offset in range(_date_span_days(s, e)):
+                    day = s + dt.timedelta(days=offset)
+                    output_path = location_dir / f"{day.isoformat()}.csv"
                     try:
-                        df_day = _payload_to_df(payload, req_day)
+                        df_day = _payload_to_df(payload, day)
                         if df_day.empty:
-                            logging.info("%s no NASA POWER data for %s", prefix, req_day)
-                            skipped += 1
+                            logging.info("%s no NASA POWER data for %s", prefix, day)
+                            _skipped += 1
                             continue
                         df_day.to_csv(output_path, index=False)
-                        saved += 1
+                        _saved += 1
                         logging.info("%s wrote %s", prefix, output_path)
                     except Exception as exc:  # pylint: disable=broad-except
-                        errors += 1
-                        logging.exception("%s unexpected error for %s: %s", prefix, req_day, exc)
-                request_days.clear()
-                request_payloads.clear()
+                        _errors += 1
+                        logging.exception("%s unexpected error for %s: %s", prefix, day, exc)
+                return _saved, _skipped, _errors
 
-            for day in DAY_RANGE:
-                if day > today:
-                    skipped += 1
-                    continue
-                output_path = location_dir / f"{day.isoformat()}.csv"
-                if day != today and output_path.exists():
-                    skipped += 1
-                    continue
-                request_payloads.append(
-                    {
-                        "location": (lat, lon),
-                        "start_time": day,
-                        "end_time": day,
-                    }
-                )
-                request_days.append(day)
-                if len(request_payloads) >= flush_threshold:
-                    _flush_requests()
-            _flush_requests()
+            spans = _group_missing_day_spans(location_dir)
+            for s, e in spans:
+                window_days = _provider_max_days('nasa_power', 365)
+                for ws, we in _iter_date_windows(s, e, window_days):
+                    if ws > today:
+                        continue
+                    _fetch_range_recursive(
+                        start=ws,
+                        end=min(we, today),
+                        fetch_fn=_np_fetch,
+                        request_kwargs={},
+                        handle_payload=_np_handle,
+                        progress=progress,
+                    )
 
     return summarise_results("nasa_power", saved, skipped, errors)
 
@@ -1147,66 +1243,48 @@ def export_iem_asos() -> str:
             location_dir = provider_dir / location_key
             location_dir.mkdir(parents=True, exist_ok=True)
 
-            request_days: List[dt.date] = []
-            request_payloads: List[Dict[str, object]] = []
-            batch_limit = getattr(client, "batch_size", 25) or 25
-            flush_threshold = compute_flush_threshold(batch_limit)
+            def _asos_fetch(params: Dict[str, object]) -> "pd.DataFrame":
+                s: dt.date = params["start"]  # type: ignore[index]
+                e: dt.date = params["end"]  # type: ignore[index]
+                return client.get_observations(
+                    station=station_id,
+                    network=network,
+                    start_time=s,
+                    end_time=e,
+                )
 
-            def _flush_requests() -> None:
-                nonlocal saved, skipped, errors
-                if not request_payloads:
-                    return
-                call_count = len(request_payloads)
-                progress.add_expected(call_count)
-                try:
-                    payloads = client.get_observations_batch(list(request_payloads))
-                except Exception:
-                    progress.complete(call_count)
-                    raise
-                progress.complete(call_count)
-                for req_day, payload in zip(request_days, payloads):
-                    output_path = location_dir / f"{req_day.isoformat()}.csv"
-                    if isinstance(payload, Exception):
-                        errors += 1
-                        logging.warning("%s request failed for %s: %s", prefix, req_day, payload)
-                        continue
+            def _asos_handle(payload: "pd.DataFrame", s: dt.date, e: dt.date) -> Tuple[int, int, int]:
+                _saved = _skipped = _errors = 0
+                for offset in range(_date_span_days(s, e)):
+                    day = s + dt.timedelta(days=offset)
+                    output_path = location_dir / f"{day.isoformat()}.csv"
                     try:
-                        df_day = _payload_to_df(payload, req_day)
+                        df_day = _payload_to_df(payload, day)
                         if df_day.empty:
-                            logging.info("%s no data for %s", prefix, req_day)
-                            skipped += 1
+                            logging.info("%s no data for %s", prefix, day)
+                            _skipped += 1
                             continue
                         df_day.to_csv(output_path, index=False)
-                        saved += 1
+                        _saved += 1
                         logging.info("%s wrote %s", prefix, output_path)
                     except Exception as exc:  # pylint: disable=broad-except
-                        errors += 1
-                        logging.exception("%s unexpected error for %s: %s", prefix, req_day, exc)
-                request_days.clear()
-                request_payloads.clear()
+                        _errors += 1
+                        logging.exception("%s unexpected error for %s: %s", prefix, day, exc)
+                return _saved, _skipped, _errors
 
-            for day in DAY_RANGE:
-                if day > today:
-                    skipped += 1
-                    continue
-                output_path = location_dir / f"{day.isoformat()}.csv"
-                if day != today and output_path.exists():
-                    skipped += 1
-                    continue
-                start = dt.datetime.combine(day, dt.time(0, 0))
-                end = start + dt.timedelta(days=1)
-                request_payloads.append(
-                    {
-                        "station": station_id,
-                        "network": network,
-                        "start_time": start,
-                        "end_time": end,
-                    }
-                )
-                request_days.append(day)
-                if len(request_payloads) >= flush_threshold:
-                    _flush_requests()
-            _flush_requests()
+            spans = _group_missing_day_spans(location_dir)
+            for s, e in spans:
+                if e <= today:
+                    window_days = _provider_max_days('iem_asos', 7)
+                    for ws, we in _iter_date_windows(s, e, window_days):
+                        _fetch_range_recursive(
+                            start=ws,
+                            end=we,
+                            fetch_fn=_asos_fetch,
+                            request_kwargs={},
+                            handle_payload=_asos_handle,
+                            progress=progress,
+                        )
 
     return summarise_results("iem_asos", saved, skipped, errors)
 
@@ -1245,79 +1323,111 @@ def _export_copernicus_provider(
         logging.exception("%s client initialisation failed: %s", label, exc)
         return f"{label} initialisation failed"
 
+    batch_limit = getattr(client, "batch_size", 1) or 1
+    del client
+
     today = dt.date.today()
     saved = skipped = errors = 0
-    batch_limit = getattr(client, "batch_size", 1) or 1
-    flush_threshold = compute_flush_threshold(batch_limit)
+
+    eligible_locations: List[Tuple[str, float, float, Optional[object]]] = []
+    for location_key, lat, lon in LOCATION_ITEMS:
+        extras = LOCATION_EXTRAS.get(location_key, {})
+        area = extras.get(area_attr) if area_attr else None
+        if requires_area and not area:
+            logging.warning("%s missing %s for %s; skipping.", label, area_attr, location_key)
+            continue
+        eligible_locations.append((location_key, lat, lon, area))
+
+    if not eligible_locations:
+        logging.info("%s has no eligible locations; nothing to export.", label)
+        return summarise_results(provider_key, saved, skipped, errors)
 
     with provider_progress(provider_key) as progress:
-        for location_key, lat, lon in LOCATION_ITEMS:
-            extras = LOCATION_EXTRAS.get(location_key, {})
-            area = extras.get(area_attr) if area_attr else None
-            if requires_area and not area:
-                logging.warning("%s missing %s for %s; skipping.", label, area_attr, location_key)
-                continue
+        progress_lock = threading.Lock()
 
+        def _record_expected(count: int) -> None:
+            if count <= 0:
+                return
+            with progress_lock:
+                progress.add_expected(count)
+
+        def _record_complete(count: int) -> None:
+            if count <= 0:
+                return
+            with progress_lock:
+                progress.complete(count)
+
+        def _process_location(
+            job: Tuple[str, float, float, Optional[object]]
+        ) -> Tuple[int, int, int]:
+            location_key, lat, lon, area = job
             prefix = f"{label}[{location_key}]"
             location_dir = provider_dir / location_key
             location_dir.mkdir(parents=True, exist_ok=True)
-            request_days: List[dt.date] = []
-            request_payloads: List[Dict[str, object]] = []
 
-            def _flush_requests() -> None:
-                nonlocal saved, skipped, errors
-                if not request_payloads:
-                    return
-                call_count = len(request_payloads)
-                progress.add_expected(call_count)
-                try:
-                    payloads = client.get_dataset_batch(list(request_payloads))
-                except Exception:
-                    progress.complete(call_count)
-                    raise
-                progress.complete(call_count)
-                for req_day, payload in zip(request_days, payloads):
-                    output_path = location_dir / f"{req_day.isoformat()}.csv"
-                    if isinstance(payload, Exception):
-                        errors += 1
-                        logging.warning("%s request failed for %s: %s", prefix, req_day, payload)
-                        continue
+            try:
+                local_client = CopernicusCdsClient(config_path=CONFIG_PATH, provider=provider_key)
+            except Exception as exc:  # pylint: disable=broad-except
+                logging.exception("%s client initialisation failed: %s", prefix, exc)
+                raise
+
+            local_saved = local_skipped = local_errors = 0
+
+            # Compute contiguous missing spans and fetch them in provider-configured windows
+            spans = _group_missing_day_spans(location_dir)
+            default_window = 7 if provider_key.endswith("land_timeseries") else 31
+            window_days = _provider_max_days(provider_key, default_window)
+
+            for s, e in spans:
+                if s > today:
+                    continue
+                for ws, we in _iter_date_windows(s, min(e, today), window_days):
+                    _record_expected(1)
                     try:
-                        df_day = transform_fn(payload, req_day)
-                        if df_day.empty:
-                            logging.info("%s no data for %s", prefix, req_day)
-                            skipped += 1
+                        payload = local_client.get_dataset(
+                            area=area,
+                            start_date=ws,
+                            end_date=we,
+                            latitude=lat,
+                            longitude=lon,
+                        )
+                    except Exception as exc:
+                        _record_complete(1)
+                        msg = str(exc)
+                        if "MultiAdaptorNoDataError" in msg or "NoData" in msg:
+                            # Count all days in the window as skipped
+                            local_skipped += _date_span_days(ws, we)
+                            logging.info("%s no data for %s..%s (reported by API)", prefix, ws, we)
                             continue
-                        df_day.to_csv(output_path, index=False)
-                        saved += 1
-                        logging.info("%s wrote %s", prefix, output_path)
-                    except Exception as exc:  # pylint: disable=broad-except
-                        errors += 1
-                        logging.exception("%s unexpected error for %s: %s", prefix, req_day, exc)
-                request_days.clear()
-                request_payloads.clear()
+                        local_errors += 1
+                        logging.warning("%s request failed for %s..%s: %s", prefix, ws, we, exc)
+                        continue
+                    _record_complete(1)
+                    # Split payload into per-day outputs
+                    for offset in range(_date_span_days(ws, we)):
+                        day = ws + dt.timedelta(days=offset)
+                        out = location_dir / f"{day.isoformat()}.csv"
+                        try:
+                            df_day = transform_fn(payload, day)
+                            if df_day.empty:
+                                local_skipped += 1
+                                continue
+                            df_day.to_csv(out, index=False)
+                            local_saved += 1
+                            logging.info("%s wrote %s", prefix, out)
+                        except Exception as exc:  # pylint: disable=broad-except
+                            local_errors += 1
+                            logging.exception("%s unexpected error for %s: %s", prefix, day, exc)
+            return local_saved, local_skipped, local_errors
 
-            for day in DAY_RANGE:
-                if day > today:
-                    skipped += 1
-                    continue
-                output_path = location_dir / f"{day.isoformat()}.csv"
-                if day != today and output_path.exists():
-                    skipped += 1
-                    continue
-                request_payloads.append(
-                    {
-                        "area": area,
-                        "start_date": day,
-                        "end_date": day,
-                        "latitude": lat,
-                        "longitude": lon,
-                    }
-                )
-                request_days.append(day)
-                if len(request_payloads) >= flush_threshold:
-                    _flush_requests()
-            _flush_requests()
+        max_workers = max(1, min(8, len(eligible_locations)))
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [executor.submit(_process_location, job) for job in eligible_locations]
+            for future in as_completed(futures):
+                loc_saved, loc_skipped, loc_errors = future.result()
+                saved += loc_saved
+                skipped += loc_skipped
+                errors += loc_errors
 
     return summarise_results(provider_key, saved, skipped, errors)
 
@@ -1438,91 +1548,61 @@ def export_openweather() -> str:
             location_dir = provider_dir / location_key
             location_dir.mkdir(parents=True, exist_ok=True)
 
-            request_days: List[dt.date] = []
-            request_payloads: List[Dict[str, object]] = []
-            batch_limit = getattr(client, "batch_size", 50) or 50
-            flush_threshold = compute_flush_threshold(batch_limit)
-
-            def _flush_requests() -> None:
-                nonlocal saved, skipped, errors
-                if not request_payloads:
-                    return
-                call_count = len(request_payloads)
-                progress.add_expected(call_count)
-                try:
-                    payloads = client.get_historical_batch(list(request_payloads))
-                except Exception:
-                    progress.complete(call_count)
-                    raise
-                progress.complete(call_count)
-                for req_day, payload in zip(request_days, payloads):
-                    output_path = location_dir / f"{req_day.isoformat()}.csv"
-                    if isinstance(payload, Exception):
-                        errors += 1
-                        logging.warning("%s historical failed for %s: %s", prefix, req_day, payload)
-                        continue
-                    try:
-                        records = payload.get("list", [])
-                        if not records:
-                            logging.info("%s no data for %s", prefix, req_day)
-                            skipped += 1
-                            continue
-                        df = pd.json_normalize(records)
-                        if "dt" in df.columns:
-                            df["timestamp"] = pd.to_datetime(df["dt"], unit="s", utc=True)
-                        elif "time" in df.columns:
-                            df["timestamp"] = pd.to_datetime(df["time"], utc=True)
-                        else:
-                            logging.info("%s unable to determine timestamp for %s", prefix, req_day)
-                            skipped += 1
-                            continue
-                        df = df[df["timestamp"].dt.date == req_day]
-                        if df.empty:
-                            logging.info("%s no filtered data for %s", prefix, req_day)
-                            skipped += 1
-                            continue
-                        df.to_csv(output_path, index=False)
-                        saved += 1
-                        logging.info("%s wrote %s", prefix, output_path)
-                    except Exception as exc:  # pylint: disable=broad-except
-                        errors += 1
-                        logging.exception("%s unexpected error for %s: %s", prefix, req_day, exc)
-                request_days.clear()
-                request_payloads.clear()
-
-            for day in DAY_RANGE:
-                if day > today:
-                    logging.debug("%s skipping %s (future dates unsupported).", prefix, day)
-                    skipped += 1
-                    continue
-
-                start = dt.datetime.combine(day, dt.time(0, 0), tzinfo=UTC)
-                end = min(start + dt.timedelta(days=1), now_utc)
-                if end <= start:
-                    logging.debug("%s skipping %s (no elapsed time yet).", prefix, day)
-                    skipped += 1
-                    continue
-
-                output_path = location_dir / f"{day.isoformat()}.csv"
-                if day != today and output_path.exists():
-                    logging.debug("%s skipping %s (already exported).", prefix, day)
-                    skipped += 1
-                    continue
-
-                request_payloads.append(
-                    {
-                        "location": (lat, lon),
-                        "start_time": start,
-                        "end_time": end,
-                        "interval_type": "hour",
-                        "units": "metric",
-                    }
+            def _ow_fetch(params: Dict[str, object]) -> dict:
+                s: dt.date = params["start"]  # type: ignore[index]
+                e: dt.date = params["end"]  # type: ignore[index]
+                start_dt = dt.datetime.combine(s, dt.time(0, 0), tzinfo=UTC)
+                end_dt = dt.datetime.combine(e + dt.timedelta(days=1), dt.time(0, 0), tzinfo=UTC)
+                end_dt = min(end_dt, now_utc)
+                if end_dt <= start_dt:
+                    return {"list": []}
+                return client.get_historical(
+                    location=(lat, lon), start_time=start_dt, end_time=end_dt, interval_type="hour", units="metric"
                 )
-                request_days.append(day)
-                if len(request_payloads) >= flush_threshold:
-                    _flush_requests()
 
-            _flush_requests()
+            def _ow_handle(payload: dict, s: dt.date, e: dt.date) -> Tuple[int, int, int]:
+                _saved = _skipped = _errors = 0
+                records = payload.get("list", []) if isinstance(payload, dict) else []
+                if not records:
+                    return 0, _date_span_days(s, e), 0
+                try:
+                    df = pd.json_normalize(records)
+                    if "dt" in df.columns:
+                        df["timestamp"] = pd.to_datetime(df["dt"], unit="s", utc=True)
+                    elif "time" in df.columns:
+                        df["timestamp"] = pd.to_datetime(df["time"], utc=True)
+                except Exception:
+                    return 0, 0, _date_span_days(s, e)
+                for offset in range(_date_span_days(s, e)):
+                    day = s + dt.timedelta(days=offset)
+                    out = location_dir / f"{day.isoformat()}.csv"
+                    try:
+                        day_df = df[df["timestamp"].dt.date == day]
+                        if day_df.empty:
+                            _skipped += 1
+                            continue
+                        day_df.to_csv(out, index=False)
+                        _saved += 1
+                        logging.info("%s wrote %s", prefix, out)
+                    except Exception as exc:  # pylint: disable=broad-except
+                        _errors += 1
+                        logging.exception("%s unexpected error for %s: %s", prefix, day, exc)
+                return _saved, _skipped, _errors
+
+            spans = _group_missing_day_spans(location_dir)
+            for s, e in spans:
+                if s > today:
+                    continue
+                window_days = _provider_max_days('openweather', 5)
+                for ws, we in _iter_date_windows(s, min(e, today), window_days):
+                    _fetch_range_recursive(
+                        start=ws,
+                        end=we,
+                        fetch_fn=_ow_fetch,
+                        request_kwargs={},
+                        handle_payload=_ow_handle,
+                        progress=progress,
+                    )
 
     return summarise_results("openweather", saved, skipped, errors)
 
@@ -1565,8 +1645,45 @@ def export_weatherbit() -> str:
             location_dir = provider_dir / location_key
             location_dir.mkdir(parents=True, exist_ok=True)
 
-            historical_days: List[dt.date] = []
-            historical_requests: List[Dict[str, object]] = []
+            # Historical range path (Weatherbit subhourly supports start/end ranges; 30-day safe window)
+            def _wb_fetch(params: Dict[str, object]) -> dict:
+                s: dt.date = params["start"]  # type: ignore[index]
+                e: dt.date = params["end"]  # type: ignore[index]
+                return client.get_historical(location=(lat, lon), start_time=s, end_time=e, units="M")
+
+            def _wb_handle(payload: dict, s: dt.date, e: dt.date) -> Tuple[int, int, int]:
+                _saved = _skipped = _errors = 0
+                for offset in range(_date_span_days(s, e)):
+                    day = s + dt.timedelta(days=offset)
+                    output_path = location_dir / f"{day.isoformat()}.csv"
+                    try:
+                        df_day = _payload_to_df(payload, day)
+                        if df_day.empty:
+                            logging.info("%s no historical data for %s", prefix, day)
+                            _skipped += 1
+                            continue
+                        df_day.to_csv(output_path, index=False)
+                        _saved += 1
+                        logging.info("%s wrote %s", prefix, output_path)
+                    except Exception as exc:  # pylint: disable=broad-except
+                        _errors += 1
+                        logging.exception("%s unexpected historical error for %s: %s", prefix, day, exc)
+                return _saved, _skipped, _errors
+
+            spans = _group_missing_day_spans(location_dir)
+            for s, e in spans:
+                if e < today:
+                    window_days = _provider_max_days('weatherbit', 30)
+                    for ws, we in _iter_date_windows(s, e, window_days):
+                        _fetch_range_recursive(
+                            start=ws,
+                            end=we,
+                            fetch_fn=_wb_fetch,
+                            request_kwargs={},
+                            handle_payload=_wb_handle,
+                            progress=progress,
+                        )
+
             forecast_days: List[dt.date] = []
             forecast_requests: List[Dict[str, object]] = []
             batch_limit = getattr(client, "batch_size", 50) or 50
@@ -1706,6 +1823,46 @@ def export_weatherapi() -> str:
             location_dir = provider_dir / location_key
             location_dir.mkdir(parents=True, exist_ok=True)
 
+            # Historical range path (WeatherAPI supports dt+end_dt, commonly up to 7-30 days)
+            def _wa_fetch(params: Dict[str, object]) -> dict:
+                s: dt.date = params["start"]  # type: ignore[index]
+                e: dt.date = params["end"]  # type: ignore[index]
+                return client.get_historical(location=(lat, lon), date=s, end_date=e)
+
+            def _wa_handle(payload: dict, s: dt.date, e: dt.date) -> Tuple[int, int, int]:
+                _saved = _skipped = _errors = 0
+                for offset in range(_date_span_days(s, e)):
+                    day = s + dt.timedelta(days=offset)
+                    output_path = location_dir / f"{day.isoformat()}.csv"
+                    try:
+                        df_day = _payload_to_df(payload, day)
+                        if df_day.empty:
+                            logging.info("%s no historical data for %s", prefix, day)
+                            _skipped += 1
+                            continue
+                        df_day.to_csv(output_path, index=False)
+                        _saved += 1
+                        logging.info("%s wrote %s", prefix, output_path)
+                    except Exception as exc:  # pylint: disable=broad-except
+                        _errors += 1
+                        logging.exception("%s unexpected historical error for %s: %s", prefix, day, exc)
+                return _saved, _skipped, _errors
+
+            spans = _group_missing_day_spans(location_dir)
+            for s, e in spans:
+                if e < today:
+                    window_days = _provider_max_days('weatherapi_com', 7)
+                    for ws, we in _iter_date_windows(s, e, window_days):
+                        _fetch_range_recursive(
+                            start=ws,
+                            end=we,
+                            fetch_fn=_wa_fetch,
+                            request_kwargs={},
+                            handle_payload=_wa_handle,
+                            progress=progress,
+                        )
+
+            # Forecast path remains per-day
             historical_days: List[dt.date] = []
             historical_requests: List[Dict[str, object]] = []
             forecast_days: List[dt.date] = []
@@ -1948,15 +2105,11 @@ def provider_progress(provider_key: str) -> _NullProviderProgress:
 
 
 def generate_cached_coverage_chart(output_path: Path) -> None:
-    if not any(PROVIDER_FLAGS.values()):
-        logging.info("No providers enabled; skipping cached coverage chart.")
-        return
-
     date_index = pd.date_range(START_DATE, END_DATE, freq="D")
-    active_providers = [key for key, enabled in PROVIDER_FLAGS.items() if enabled and key in PROVIDER_LABELS]
+    active_providers = list(PROVIDER_FUNCTIONS.keys())
 
     if not active_providers:
-        logging.info("No active providers for chart; skipping.")
+        logging.info("No providers configured for chart; skipping.")
         return
 
     cmap = matplotlib.colors.ListedColormap(["#f0f0f0", "#2ca02c"])
@@ -1964,6 +2117,7 @@ def generate_cached_coverage_chart(output_path: Path) -> None:
     if len(active_providers) == 1:
         axes = [axes]
 
+    last_im = None
     for ax, provider_key in zip(axes, active_providers):
         provider_dir = DATA_ROOT / provider_key
         coverage_rows = []
@@ -1985,6 +2139,7 @@ def generate_cached_coverage_chart(output_path: Path) -> None:
 
         data = np.array(coverage_rows, dtype=int)
         im = ax.imshow(data, aspect="auto", interpolation="nearest", cmap=cmap, vmin=0, vmax=1)
+        last_im = im
 
         ax.set_yticks(range(len(location_names)))
         ax.set_yticklabels(location_names)
@@ -2002,11 +2157,12 @@ def generate_cached_coverage_chart(output_path: Path) -> None:
         ax.set_ylabel("Location")
 
     axes[-1].set_xlabel("Date")
-    fig.suptitle(f"Cached coverage {START_DATE.isoformat()} — {END_DATE.isoformat()}")
+    fig.suptitle(f"Cached coverage {START_DATE.isoformat()} â€” {END_DATE.isoformat()}")
     plt.tight_layout(rect=(0, 0, 1, 0.97))
-    cbar = fig.colorbar(im, ax=axes, orientation="horizontal", fraction=0.025, pad=0.08)
-    cbar.set_ticks([0, 1])
-    cbar.set_ticklabels(["Missing", "Cached"])
+    if last_im is not None:
+        cbar = fig.colorbar(last_im, ax=axes, orientation="horizontal", fraction=0.025, pad=0.08)
+        cbar.set_ticks([0, 1])
+        cbar.set_ticklabels(["Missing", "Cached"])
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_path, dpi=150)
@@ -2019,12 +2175,28 @@ def run_export_once() -> None:
         key: func for key, func in PROVIDER_FUNCTIONS.items() if PROVIDER_FLAGS.get(key, False)
     }
 
+    # Restrict/override via --providers if specified
+    global PROVIDER_INCLUDE
+    if PROVIDER_INCLUDE:
+        enabled_providers = {k: v for k, v in enabled_providers.items() if k in PROVIDER_INCLUDE}
+        # Also allow enabling explicitly requested providers even if toggled off
+        for k in list(PROVIDER_INCLUDE):
+            if k in PROVIDER_FUNCTIONS and k not in enabled_providers:
+                enabled_providers[k] = PROVIDER_FUNCTIONS[k]
+
     if not enabled_providers:
         logging.warning("No providers enabled; nothing to export.")
         return
 
     total_providers = len(enabled_providers)
     logging.info("Starting export run across %d providers.", total_providers)
+
+    if not SKIP_COVERAGE:
+        logging.info("Refreshing coverage chart before provider exports.")
+        try:
+            generate_cached_coverage_chart(CACHE_IMAGE_PATH)
+        except Exception as exc:  # pylint: disable=broad-except
+            logging.exception("Failed to generate pre-run coverage chart: %s", exc)
 
     provider_order = list(enabled_providers.keys())
     global PROVIDER_BAR_POSITIONS
@@ -2060,16 +2232,58 @@ def run_export_once() -> None:
             GLOBAL_API_BAR.close()
             GLOBAL_API_BAR = None
 
-    logging.info("Provider exports complete. Generating coverage chart.")
-    try:
-        generate_cached_coverage_chart(CACHE_IMAGE_PATH)
-    except Exception as exc:  # pylint: disable=broad-except
-        logging.exception("Failed to generate coverage chart: %s", exc)
+    if not SKIP_COVERAGE:
+        logging.info("Provider exports complete. Generating coverage chart.")
+        try:
+            generate_cached_coverage_chart(CACHE_IMAGE_PATH)
+        except Exception as exc:  # pylint: disable=broad-except
+            logging.exception("Failed to generate coverage chart: %s", exc)
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Weather data export runner")
+    parser.add_argument("--once", action="store_true", help="Run a single cycle and exit")
+    parser.add_argument("--skip-coverage", action="store_true", help="Skip coverage chart")
+    parser.add_argument(
+        "--providers", type=str, default=None, help="Comma-separated provider keys to run"
+    )
+    parser.add_argument("--since", type=str, default=None, help="Start date YYYY-MM-DD")
+    parser.add_argument("--until", type=str, default=None, help="End date YYYY-MM-DD")
+    parser.add_argument(
+        "--limit-locations", type=int, default=None, help="Limit number of locations"
+    )
+
+    args = parser.parse_args()
+
+    # Apply runtime overrides
+    global SKIP_COVERAGE, PROVIDER_INCLUDE, LOCATION_LIMIT
+    SKIP_COVERAGE = bool(args.skip_coverage)
+    PROVIDER_INCLUDE = (
+        {p.strip() for p in args.providers.split(",") if p.strip()} if args.providers else None
+    )
+    LOCATION_LIMIT = args.limit_locations
+
+    # Update dates and locations
+    _set_date_range(args.since, args.until)
+    _apply_location_limit(LOCATION_LIMIT)
+
+    # If --providers was supplied, force-enable their toggles and rebuild flags
+    _force_enable_toggles(PROVIDER_INCLUDE)
+    _rebuild_provider_flags()
+
     logging.info("Weather export script initialised.")
+
     try:
+        if args.once:
+            run_start = time.time()
+            try:
+                run_export_once()
+            except Exception as exc:  # pylint: disable=broad-except
+                logging.exception("Unexpected error during export run: %s", exc)
+            elapsed = time.time() - run_start
+            logging.info("Export run completed in %.2f seconds.", elapsed)
+            return
+
         while True:
             run_start = time.time()
             try:
@@ -2088,6 +2302,83 @@ def main() -> None:
     except KeyboardInterrupt:
         logging.info("Weather export script interrupted; shutting down.")
 
+ 
+def _group_missing_day_spans(location_dir: Path, *, include_today: bool = True) -> List[Tuple[dt.date, dt.date]]:
+    spans: List[Tuple[dt.date, dt.date]] = []
+    start: Optional[dt.date] = None
+    end: Optional[dt.date] = None
+    today = dt.date.today()
+    for day in DAY_RANGE:
+        out = location_dir / f"{day.isoformat()}.csv"
+        needs = (day == today and include_today) or (not out.exists())
+        if not needs:
+            if start is not None:
+                spans.append((start, end or start))
+                start = end = None
+            continue
+        if start is None:
+            start = end = day
+        else:
+            # extend consecutive span
+            if end and (day - end == dt.timedelta(days=1)):
+                end = day
+            else:
+                spans.append((start, end or start))
+                start = end = day
+    if start is not None:
+        spans.append((start, end or start))
+    return spans
+
+
+def _date_span_days(start: dt.date, end: dt.date) -> int:
+    return (end - start).days + 1
+
+
+def _fetch_range_recursive(
+    *,
+    start: dt.date,
+    end: dt.date,
+    fetch_fn,
+    request_kwargs: Dict[str, object],
+    handle_payload,
+    progress,
+) -> Tuple[int, int, int]:
+    """Attempt range fetch; on failure, split and recurse until single days.
+
+    Returns (saved, skipped, errors) aggregated across recursion.
+    """
+    saved = skipped = errors = 0
+    try:
+        progress.add_expected(1)
+        payload = fetch_fn({**request_kwargs, "start": start, "end": end})
+        progress.complete(1)
+        s, k, e = handle_payload(payload, start, end)
+        return s, k, e
+    except Exception as exc:  # pylint: disable=broad-except
+        progress.complete(1)
+        if _date_span_days(start, end) <= 1:
+            logging.warning("Range request failed for %s: %s", start, exc)
+            return 0, 0, 1
+        mid = start + dt.timedelta(days=_date_span_days(start, end) // 2 - 1)
+        left_end = mid
+        right_start = mid + dt.timedelta(days=1)
+        s1, k1, e1 = _fetch_range_recursive(
+            start=start,
+            end=left_end,
+            fetch_fn=fetch_fn,
+            request_kwargs=request_kwargs,
+            handle_payload=handle_payload,
+            progress=progress,
+        )
+        s2, k2, e2 = _fetch_range_recursive(
+            start=right_start,
+            end=end,
+            fetch_fn=fetch_fn,
+            request_kwargs=request_kwargs,
+            handle_payload=handle_payload,
+            progress=progress,
+        )
+        return s1 + s2, k1 + k2, e1 + e2
 
 if __name__ == "__main__":
     main()

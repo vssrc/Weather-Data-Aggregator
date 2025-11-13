@@ -1,0 +1,3765 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title> Historical weather API - OpenWeatherMap</title>
+  <meta name="apple-itunes-app" content="app-id=1535923697">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-31TSX35RJT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag() { dataLayer.push(arguments); }
+  gtag('js', new Date());
+
+  gtag('config', 'G-31TSX35RJT');
+</script>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="keywords" content="weather, world, Openstreetmap, forecast, Openweather, current">
+<meta name="description" content="Access hourly historical weather data for any global location with OpenWeather&#039;s History API. Available
+in JSON or CSV formats, tailored to your subscription type.">
+<meta name="author" content="OpenWeatherMap.org">
+<meta name="domain" content="OpenWeatherMap.org">
+<meta name="p:domain_verify" content="34fe229eab8562dca90f4a5962ff80a9">
+<meta property="title" content="Historical weather API">  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">  <link rel="shortcut icon" href="/themes/openweathermap/assets/vendor/owm/img/icons/favicon.ico">
+<link rel="icon" href="/themes/openweathermap/assets/vendor/owm/img/icons/logo_16x16.png" sizes="16x16"
+  type="image/png">
+<link rel="icon" href="/themes/openweathermap/assets/vendor/owm/img/icons/logo_32x32.png" sizes="32x32"
+  type="image/png">
+<link rel="icon" href="/themes/openweathermap/assets/vendor/owm/img/icons/logo_60x60.png" sizes="60x60"
+  type="image/png">  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Oswald:400,700,300">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700,500,400italic,500italic">  <link rel="stylesheet" href="https://openweathermap.org/plugins/offline/gdpr/assets/cookieBanner/banner.css">
+  <link href="/combine/f715fd89ab078cb9d62b06cf2ebe66e0-1761731492" rel="stylesheet">
+<!-- <link href="https://openweathermap.org/combine/9e05934b20b1168fe3f391e409e227a4-1761731492" rel="stylesheet"> -->
+<!-- <link href="/themes/openweathermap/assets/css/new_design.css" rel="stylesheet"> -->  <script src="/combine/d8fb6d080cb70d894318fcae14526239-1761731492"></script>
+<!-- <script src="https://openweathermap.org/combine/9dc69b9a99b742c8cd4a003c67dfede2-1761731492"></script> -->  </head>
+
+<body class="body-orange" onClick="closePopUps()">
+  <link href="/themes/openweathermap/assets/css/smart_banner_android.css" rel="stylesheet">
+
+<div id="banner_android" class="banner_stripe">
+    <div class="banner_container">
+        <a class="smartbanner__exit" onClick="bannerClose()"></a>
+        <img src="/themes/openweathermap/assets/img/mobile_app/android-app-top-banner.png" class="banner_icon"
+            alt="banner android">
+        <div>
+            <p class="smartbanner-text">OpenWeather</p>
+            <p class="smartbanner-text">OpenWeather Ltd.</p>
+            <p class="smartbanner-text">GET - on Google Play</p>
+        </div>
+    </div>
+    <a class="google_button" href="https://play.google.com/store/apps/details?id=uk.co.openweather">VIEW</a>
+</div>
+
+<script src="/themes/openweathermap/assets/js/smart_banner_android.js"></script>  <nav id="nav-website" onClick="toggleMenu(event)">
+  <ul id="first-level-nav">
+    <li class="logo">
+      <a href="/">
+        <img src="/themes/openweathermap/assets/img/logo_white_cropped.png" alt="logo">
+      </a>
+    </li>
+    <li id="hamburger">
+      <img src="/themes/openweathermap/assets/img/owm_icons/icon_hamburger.svg" alt="icon hamburger">
+    </li>
+    <li id="desktop-menu">
+      <form role="search" action="/find" method="get">
+        <input type="text" name="q" placeholder="Weather in your city">
+        <input type="submit" class="submit">
+      </form>
+      <ul>
+        <li>
+          <a href="/guide">Guide</a>
+        </li>
+        <li>
+          <a href="/api">API</a>
+        </li>
+        <!-- <li>
+          <a href="https://dashboard.openweather.co.uk/" target="_blank">Dashboard</a>
+        </li> -->
+        <li class="with-dropdown">
+          <div id="dashboards-dropdown">Dashboards</div>
+          <ul class="dropdown-menu" id="dashboards-dropdown-menu" style="width: 230px !important; left: 20% !important;">
+            <li><a href="https://dashboard.openweather.co.uk/">Weather Dashboard</a></li>
+            <li><a href="https://openweather.co.uk/products/energy-dashboard">Energy Dashboard</a></li>
+            <li><a href="https://openweather.co.uk/products/extreme-weather-dashboard">Extreme Weather Dashboard</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="https://home.openweathermap.org/marketplace" target="_blank">Marketplace</a>
+        </li>
+        <li>
+          <a href="/price">Pricing</a>
+        </li>
+        <li>
+          <a href="/weathermap">Maps</a>
+        </li>
+        <li>
+          <a href="/our-initiatives">Our Initiatives</a>
+        </li>
+        <!-- <li>
+          <a href="/examples">Partners</a>
+        </li> -->
+        <li>
+          <a href="https://openweather.co.uk/blog" target="_blank">Blog</a>
+        </li>
+        <li>
+          <a href="https://openweather.co.uk" class="marketplace" target="_blank">For Business</a>
+        </li>
+                <li class="user-li"><a href="https://openweathermap.org/home/sign_in">Sign in</a></li>
+                <li><a href="/support-centre">Support centre</a></li>
+    </li>
+  </ul>
+  </li>
+  </ul>
+  <ul id="mobile-menu">
+    <li>
+      <form role="search" action="/find" method="get">
+        <input type="text" name="q" placeholder="Weather in your city">
+        <input type="submit" class="submit">
+      </form>
+    </li>
+    <li>
+      <a href="/guide">Guide</a>
+    </li>
+    <li>
+      <a href="/api">API</a>
+    </li>
+    <li>
+      <a href="https://dashboard.openweather.co.uk/" target="_blank">Dashboard</a>
+    </li>
+    <li>
+      <a href="https://home.openweathermap.org/marketplace" target="_blank">Marketplace</a>
+    </li>
+    <li>
+      <a href="/price">Pricing</a>
+    </li>
+    <li>
+      <a href="/weathermap">Maps</a>
+    </li>
+    <li>
+      <a href="/our-initiatives">Our Initiatives</a>
+    </li>
+    <li>
+      <a href="/examples">Partners</a>
+    </li>
+    <li>
+      <a href="https://openweather.co.uk/blog" target="_blank">Blog</a>
+    </li>
+    <li>
+      <a href="https://openweather.co.uk" class="marketplace" target="_blank">For Business</a>
+    </li>
+    <li><a href="/support-centre">Support centre</a></li>
+        <li><a href="https://openweathermap.org/home/sign_in">Sign in</a></li>
+      </ul>
+</nav>
+<div class="nav-styles"></div>  <main class="wrapper">
+        <div class="topic">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-7">
+                                    <h1 class="breadcrumb-title">History API</h1>
+                            </div>
+            <div class="col-sm-5">
+                <ol class="breadcrumb pull-right hidden-xs">
+                    <li><a href="/">Home</a></li>
+                                            <li class="active"><a href="/api">API</a></li>
+                                                            
+                                                                        <li class="breadcrumb__leaf">History API</li>
+                                                            </ol>
+            </div>
+        </div>
+    </div>   
+</div>        <div class="container documentation">
+  <div class="doc-container">
+    <div>
+      <nav>
+        <ul>
+          <li>
+            <a href="#concept">Product concept</a>
+          </li>
+          <li>
+            <a href="#city">Call hourly historical data</a>
+            <ul>
+              <li>
+                <a href="#geo">How to make an API call</a>
+              </li>
+              <li><a href="#JSON">Example of API response</a></li>
+              <li><a href="#fields">Fields in API response</a></li>
+              <li><a href="#list">List of weather condition codes</a></li>
+              <li><a href="#min">Min/max temperature in historical weather API and forecast API</a></li>
+            </ul>
+          </li>
+          <li>
+            <a href="#historybulk">History Bulk</a>
+          </li>
+          <li>
+            <a href="#other">Other features</a>
+            <ul>
+              <li><a href="#geocoding">Geocoding API</a></li>
+              <li><a href="#builtin">Built-in geocoding</a>
+                <ul>
+                  <li>
+                    <a href="#name">Built-in API request by city name</a>
+                  </li>
+                  <li>
+                    <a href="#cityid">Built-in API request by city ID</a>
+                  </li>
+                </ul>
+              </li>
+              <li><a href="#data">Units of measurement</a></li>
+            </ul>
+          </li>
+        </ul>
+        <a class="btn_block orange round" href="/chat" target="_blank">Chat with Ulla - OpenWeather AI
+          assistant</a>
+      </nav>
+    </div>
+    <div>
+      <section id="concept">
+        <h2>Product concept</h2>
+        <p>We provide hourly historical weather data for any location on the globe via History API.
+          Availability of hourly historical data depends on a type of your <a target="_blank"
+            href="/price#current">subscription</a>.</p>
+        <p>You can also download this data in JSON or CSV format - please read <a href="/history-bulk"
+            target="blank">History Bulk</a> and <a href="/api/history-forecast-bulk" target="blank">History Forecast
+            Bulk</a>.</p>
+      </section>
+      <section id="city">
+        <h2>Call hourly historical data</h2>
+
+        <section id="geo">
+          <h3>How to make an API call</h3>
+          <p class="sub-header">API call</p>
+          <div class="api">
+            <code>
+                     https://history.openweathermap.org/data/2.5/history/city?lat={lat}&lon={lon}&type=hour&start={start}&end={end}&appid=<a href="https://home.openweathermap.org/api_keys" target="_blank">{API key}</a>
+                  </code>
+          </div>
+          <div class="api">
+            <code>
+                     https://history.openweathermap.org/data/2.5/history/city?lat={lat}&lon={lon}&type=hour&start={start}&cnt={cnt}&appid=<a href="https://home.openweathermap.org/api_keys" target="_blank">{API key}</a>
+                  </code>
+          </div>
+
+          <table class="material-table">
+            <tr>
+              <th colspan="3">Parameters</th>
+            </tr>
+            <tr>
+              <td><code class="nowrap">lat</code></td>
+              <td><span class="sub">required</span></td>
+              <td>Latitude. If you need the geocoder to automatic convert city names and zip-codes to geo coordinates
+                and the other way around, please use our <a href="/api/geocoding-api">Geocoding API</a></td>
+            </tr>
+            <tr>
+              <td><code class="nowrap">lon</code></td>
+              <td><span class="sub">required</span></td>
+              <td>Longitude. If you need the geocoder to automatic convert city names and zip-codes to geo coordinates
+                and the other way around, please use our <a href="/api/geocoding-api">Geocoding API</a></td>
+            </tr>
+            <tr>
+              <td><code>type</code></td>
+              <td><span class="sub">required</span></td>
+              <td>Type of the call, keep this parameter in the API call as <code>hour</code></td>
+            </tr>
+            <tr>
+              <td><code>appid</code></td>
+              <td class="sub">required</td>
+              <td>Your unique API key (you can always find it on your account page under the <a
+                  href="https://home.openweathermap.org/api_keys" target="_blank">"API key" tab</a>)</td>
+            </tr>
+            <tr>
+              <td><code>start</code></td>
+              <td><span class="sub">optional</span></td>
+              <td>Start date (unix time, UTC time zone), e.g. start=1369728000</td>
+            </tr>
+            <tr>
+              <td><code>end</code></td>
+              <td><span class="sub">optional</span></td>
+              <td>End date (unix time, UTC time zone), e.g. end=1369789200</td>
+            </tr>
+            <tr>
+              <td><code>cnt</code></td>
+              <td><span class="sub">optional</span></td>
+              <td>A number of timestamps in response (one per hour, can be used instead of the parameter
+                <code>end</code>)
+              </td>
+            </tr>
+          </table>
+          <div class="info-board info-board-blue">
+            <p>Please use <a href="/api/geocoding-api"><b><u>Geocoder API</u></b></a> if you need automatic convert city
+              names and zip-codes to geo coordinates and the other way around. </p>
+            <p>Please note that <a href="#geocoding"><u>built-in geocoder</u></a> has been deprecated. Although it is
+              still available for use, bug fixing and updates are no longer available for this functionality. </p>
+          </div>
+
+          <p class="sub-header">Example of API call</p>
+          <div class="response">
+            <div class="api">
+              <code>
+                        https://history.openweathermap.org/data/2.5/history/city?lat=41.85&lon=-87.65&appid=<a href="https://home.openweathermap.org/api_keys" target="_blank">{API key}</a>
+                     </code>
+            </div>
+            <div class="content">
+              <pre>
+                        <code class="json">
+{
+   "message":"",
+   "cod":"200",
+   "city_id":4887398,
+   "calctime":0.0863,
+   "cnt":4,
+   "list":[
+   {
+      "main":{
+         "temp":268.987,
+         "temp_min":268.987,
+         "temp_max":268.987,
+         "pressure":1001.11,
+         "sea_level":1024.68,
+         "grnd_level":1001.11,
+         "humidity":100
+      },
+      "wind":{
+         "speed":5.06,
+         "deg":291.002
+      },
+      "clouds":{
+         "all":48
+      },
+      "weather":[
+         {
+            "id":802,
+            "main":"Clouds",
+            "description":"scattered clouds",
+            "icon":"03d"
+         }
+      ],
+      "dt":1485703465
+   },
+   {
+      "main":{
+         "temp":268.097,
+         "temp_min":268.097,
+         "temp_max":268.097,
+         "pressure":1003.57,
+         "sea_level":1027.08,
+         "grnd_level":1003.57,
+         "humidity":100
+      },
+      "wind":{
+         "speed":8.56,
+         "deg":314.007
+      },
+      "clouds":{
+         "all":44
+      },
+      "weather":[
+         {
+            "id":802,
+            "main":"Clouds",
+            "description":"scattered clouds",
+            "icon":"03d"
+         }
+      ],
+      "dt":1485730032
+   },
+   {
+      "main":{
+         "temp":266.787,
+         "temp_min":266.787,
+         "temp_max":266.787,
+         "pressure":1005.73,
+         "sea_level":1029.63,
+         "grnd_level":1005.73,
+         "humidity":100
+      },
+      "wind":{
+         "speed":6.79,
+         "deg":316.012
+      },
+      "clouds":{
+         "all":0
+      },
+      "weather":[
+         {
+            "id":800,
+            "main":"Clear",
+            "description":"Sky is Clear",
+            "icon":"01n"
+         }
+      ],
+      "dt":1485755383
+   },
+   {
+      "main":{
+         "temp":263.64,
+         "pressure":1015,
+         "humidity":57,
+         "temp_min":262.15,
+         "temp_max":265.15
+      },
+      "wind":{
+         "speed":2.6,
+         "deg":280
+      },
+      "clouds":{
+         "all":1
+      },
+      "weather":[
+         {
+            "id":800,
+            "main":"Clear",
+            "description":"sky is clear",
+            "icon":"01n"
+         }
+      ],
+      "dt":1485780512
+   }
+   ]
+}
+                        </code>
+                     </pre>
+            </div>
+          </div>
+        </section>
+      </section>
+      <div class="info-board info-board-orange">
+        If you do not see some of the parameters in your API response it means that these weather phenomena are just not
+        happened for the time of measurement for the city or location chosen. Only really measured or calculated data is
+        displayed
+        in API response.
+        <p>List of all API parameters with units <a href="https://openweathermap.org/weather-data"
+            target="_blank">openweathermap.org/weather-data</a>.</p>
+      </div>
+      <section id="JSON">
+        <h3>JSON</h3>
+        <div class="response open">
+          <div class="api">
+            <code>Example of API response</code>
+          </div>
+          <div class="content">
+            <pre>
+                     <code class="json">
+{
+   "message": "Count: 24",
+   "cod": "200",
+   "city_id": 4298960,
+   "calctime": 0.00297316,
+   "cnt": 24,
+   "list": [
+   {
+   "dt": 1578384000,
+   "main": {
+     "temp": 275.45,
+     "feels_like": 271.7,
+     "pressure": 1014,
+     "humidity": 74,
+     "temp_min": 274.26,
+     "temp_max": 276.48
+   },
+   "wind": {
+     "speed": 2.16,
+     "deg": 87
+   },
+   "clouds": {
+     "all": 90
+   },
+   "weather": [
+     {
+       "id": 501,
+       "main": "Rain",
+       "description": "moderate rain",
+       "icon": "10n"
+     }
+   ],
+   "rain": {
+     "1h": 0.9
+   }
+},
+....
+                     </code>
+                  </pre>
+          </div>
+        </div>
+        <section id="fields">
+          <h3>Fields in API Response</h3>
+          <ul class="docs-list">
+            <li>
+              <code>message</code> Internal parameter
+            </li>
+            <li>
+              <code>cod</code> Internal parameter
+            </li>
+            <li>
+              <code>city_id</code> <span style="color:#8C8C8D">City ID. Please note that built-in geocoder functionality
+                has been deprecated. Learn more <a href="#builtin">here</a></span>
+            </li>
+            <li>
+              <code>calctime</code> Internal parameter
+            </li>
+            <li>
+              <code>list</code>
+              <ul>
+                <li><code>dt</code> Time of data calculation, unix, UTC
+                </li>
+                <li>
+                  <code>main</code>
+                  <ul>
+                    <li><code>main.temp</code> Temperature. Unit Default: Kelvin, Metric: Celsius, Imperial: Fahrenheit.
+                      <a href="#data">Learn more</a>
+                    </li>
+                    <li><code>main.feels_like</code> This temperature parameter accounts for the human perception of
+                      weather. Unit Default: Kelvin, Metric: Celsius, Imperial: Fahrenheit. <a href="#data">Learn
+                        more</a></li>
+                    <li><code>main.pressure</code> Atmospheric pressure on the sea level, hPa</li>
+                    <li><code>main.humidity</code> Humidity, %</li>
+                    <li><code>main.temp_min</code> Minimum temperature within a large city or a megalopolis (optional
+                      parameter). Please find more <a href="#min">here</a>. Unit Default: Kelvin, Metric: Celsius,
+                      Imperial: Fahrenheit. <a href="#data">Learn more</a>
+                    </li>
+                    <li><code>main.temp_max</code> Maximum temperature within a large city or a megalopolis (optional
+                      parameter). Please find more <a href="#min">here</a>. Unit Default: Kelvin, Metric: Celsius,
+                      Imperial: Fahrenheit. <a href="#data">Learn more</a>
+                    </li>
+                    <li><code>main.sea_level</code> Atmospheric pressure on the sea level, hPa</li>
+                    <li><code>main.grnd_level</code> Atmospheric pressure on the ground level, hPa</li>
+                  </ul>
+                </li>
+                <li>
+                  <code>wind</code>
+                  <ul>
+                    <li><code>wind.speed</code> Wind speed. Unit Default: meter/sec, Metric: meter/sec, Imperial:
+                      miles/hour. <a href="#data">Learn more</a></li>
+                    <li><code>wind.deg</code> Wind direction, degrees (meteorological)</li>
+                  </ul>
+                </li>
+                <li>
+                  <code>clouds</code>
+                  <ul>
+                    <li><code>clouds.all</code> Cloudiness, %</li>
+                  </ul>
+                </li>
+                <li>
+                  <code>rain</code>
+                  <ul>
+                    <li><code>rain.1h</code> Rain volume for the last 1 hour, mm. Please note that only mm as units of
+                      measurement are available for this parameter</li>
+                    <li><code>rain.3h</code> Rain volume for the last 3 hours, mm. Please note that only mm as units of
+                      measurement are available for this parameter</li>
+                  </ul>
+                </li>
+                <li>
+                  <code>snow</code>
+                  <ul>
+                    <li><code>snow.1h</code> Snow volume for the last 1 hour, mm. Please note that only mm as units of
+                      measurement are available for this parameter
+                    </li>
+                    <li><code>snow.3h</code> Snow volume for the last 3 hours, mm. Please note that only mm as units of
+                      measurement are available for this parameter
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  <code>weather</code> (more info <a target="_blank" href="/weather-conditions">Weather condition
+                    codes</a>)
+                  <ul>
+                    <li><code>weather.id</code> Weather condition id</li>
+                    <li><code>weather.main</code> Group of weather parameters (Rain, Snow, Clouds etc.)</li>
+                    <li><code>weather.description</code> Weather condition within the group. Please find more <a
+                        href="#list"> here</a></li>
+                    <li><code>weather.icon</code> Weather icon id</li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+      </section>
+      <section id="promotion">
+        <div class="info-board info-board-blue">
+          <p>We provide a broad variety of products such as <a href="/api/one-call-3"><span class="orange-text">One
+                Call API 3.0,</span></a> <a href="/api#solar"><span class="orange-text">Solar Irradiance & Energy
+                Prediction service,</span></a> <a href="/api/road-risk"><span class="orange-text">Road Risk
+                API,</span></a> <a href="/api/air-pollution"><span class="orange-text">Air Pollution API</span></a>
+            and solutions for advanced weather parameters like solar irradiance data, UVI, dew point, government weather
+            alerts, etc. Please review our <a href="/api"><span class="orange-text">product list</span></a> page and
+            find more info in the product documentation and <a href="/price"><span
+                class="orange-text">pricing</span></a> pages.</p>
+        </div>
+      </section>
+
+      <section id="list">
+        <h3>List of weather condition codes</h3>
+        <p>List of <a target="_blank" href="/weather-conditions">weather condition codes</a> with icons (range of
+          thunderstorm, drizzle, rain, snow, clouds, atmosphere etc.)</p>
+      </section>
+
+      <section id="min">
+        <h3>Min/max temperature in historical weather API and forecast API </h3>
+        <p>Please, do not confuse min/max parameters in hourly historical weather API and forecast API. In hourly
+          historical weather API <b>temp_min</b> and <b>temp_max</b> are optional parameters mean min / max temperature
+          in the city at
+          the moment of calculation to show deviation from the average temperature just for your reference. For large
+          cities and megalopolises geographically expanded it might be applicable. In most cases both <b>temp_min</b>
+          and <b>temp_max</b> parameters have the same volume as 'temp'. Please, use <b>temp_min</b> and <b>temp_max</b>
+          parameters optionally.</p>
+        <div class="response open">
+          <div class="api">
+            <code>
+                     Example of historical weather for cities API response
+                  </code>
+          </div>
+          <div class="content">
+            <pre>
+                     <code class="json">
+"main":{
+   "temp":306.15, // temperature at the moment of calculation
+   "pressure":1013,
+   "humidity":44,
+   "temp_min":306.15, //min  temperature in the city at the moment of calculation
+   "temp_max":306.15 //max  temperature in the city at the moment of calculation
+},
+                     </code>
+                  </pre>
+          </div>
+        </div>
+        <p>For comparison look at example of daily forecast weather API response</p>
+        <div class="response open">
+          <div class="api">
+            <code>
+                     Example of daily forecast weather API response
+                  </code>
+          </div>
+          <div class="content">
+            <pre>
+                     <code  class="json">
+"dt":1406080800,
+"temp":{
+  "day":297.77,  //daily averaged temperature
+  "min":293.52, //daily min temperature
+  "max":297.77, //daily max temperature
+  "night":293.52, //night temperature
+  "eve":297.77, //evening temperature
+  "morn":297.77, //morning temperature
+}
+                     </code>
+                  </pre>
+          </div>
+        </div>
+      </section>
+      <section id="historybulk">
+        <h2>History Bulk</h2>
+        <p>We have recently announced the History Bulk functionality that allows to extract historical data for any
+          location for <b>46+ years</b> in the past.
+        </p>
+        <p>For accessing this feature please click the next <a href="https://home.openweathermap.org/history_bulks/new"
+            target="_blank"> link</a>. The detailed documentation can be found <a href="/history-bulk"
+            target="_blank">here.</a></p>
+      </section>
+      <section id="other">
+        <h2>Other features</h2>
+
+        <section id="geocoding">
+          <h3>Geocoding API</h3>
+          <p>Requesting API calls by geographical coordinates is the most accurate way to specify any location. If you
+            need to convert city names and zip-codes to geo coordinates and the other way around automatically, please
+            use our <a href="/api/geocoding-api"><b>Geocoding API</b></a>.</p>
+        </section>
+        <section id="builtin">
+          <h3>Built-in geocoding</h3>
+          <div class="info-board info-board-orange">
+            <p>Please use <a href="/api/geocoding-api"><b>Geocoder API</b></a> if you need automatic convert city names
+              and zip-codes to geo coordinates and the other way around. </p>
+            <p><b>Please note that <a href="#name">API requests by city name</a> and <a href="#cityid">city id</a> have
+                been deprecated. Although they are still available for use, bug fixing and updates are no longer
+                available for this functionality.</b></p>
+          </div>
+          <section id="name">
+            <h4>Built-in API request by city name</h4>
+            <p>Call historical data by city name.</p>
+            <p class="sub-header">API call</p>
+            <div class="api">
+              <code>
+                      https://history.openweathermap.org/data/2.5/history/city?q={city name},{country code}&type=hour&start={start}&end={end}&appid=<a href="https://home.openweathermap.org/api_keys" target="_blank">{API key}</a>
+                  </code>
+            </div>
+            <div class="api">
+              <code>
+                     https://history.openweathermap.org/data/2.5/history/city?q={city name},{country code}&type=hour&start={start}&cnt={cnt}&appid=<a href="https://home.openweathermap.org/api_keys" target="_blank">{API key}</a>
+                  </code>
+            </div>
+            <table class="material-table">
+              <tr>
+                <th colspan="3">Parameters</th>
+              </tr>
+              <tr>
+                <td><code>q</code></td>
+                <td><span class="sub">required</span></td>
+                <td>
+                  <p>City name, state code and country code divided by comma, please refer to <a
+                      href="https://www.iso.org/obp/ui/" target="_blank">ISO 3166</a> for
+                    the
+                    state codes or country codes.</p>
+                  <p> You can specify the parameter not only in English. In this case, the API
+                    response
+                    should
+                    be returned in the same language as the language of requested location name if
+                    the
+                    location is in our predefined list of more than 200,000 locations.</p>
+                </td>
+              </tr>
+
+              <tr>
+                <td><code>type</code></td>
+                <td><span class="sub">required</span></td>
+                <td>type of the call, keep this parameter in the API call as <code>hour</code></td>
+              </tr>
+              <tr>
+                <td><code>appid</code></td>
+                <td class="sub">required</td>
+                <td>Your unique API key (you can always find it on your account page under the <a
+                    href="https://home.openweathermap.org/api_keys" target="_blank">"API key" tab</a>)</td>
+              </tr>
+              <tr>
+                <td><code>start</code></td>
+                <td><span class="sub">optional</span></td>
+                <td>Start date (unix time, UTC time zone), e.g. start=1369728000</td>
+              </tr>
+              <tr>
+                <td><code>end</code></td>
+                <td><span class="sub">optional</span></td>
+                <td>End date (unix time, UTC time zone), e.g. end=1369789200</td>
+              </tr>
+              <tr>
+                <td><code>cnt</code></td>
+                <td><span class="sub">optional</span></td>
+                <td>A number of timestamps in response (one per hour, can be used instead of <code>end</code>)</td>
+              </tr>
+            </table>
+            <p class="sub-header">Example of API call</p>
+            <div class="response">
+              <div class="api">
+                <code>
+                        https://history.openweathermap.org/data/2.5/history/city?q=London,UK&appid=<a href="https://home.openweathermap.org/api_keys" target="_blank">{API key}</a>
+                     </code>
+              </div>
+              <div class="content">
+                <pre>
+                        <code class="json">
+{
+   "message":"",
+   "cod":"200",
+   "city_id":2643743,
+   "calctime":0.0875,
+   "cnt":3,
+   "list":[
+   {
+      "main":{
+         "temp":279.946,
+         "temp_min":279.946,
+         "temp_max":279.946,
+         "pressure":1016.76,
+         "sea_level":1024.45,
+         "grnd_level":1016.76,
+         "humidity":100
+      },
+      "wind":{
+         "speed":4.59,
+         "deg":163.001
+      },
+      "clouds":{
+         "all":92
+      },
+      "weather":[
+         {
+            "id":500,
+            "main":"Rain",
+            "description":"light rain",
+            "icon":"10n"
+         }
+      ],
+      "rain":{
+         "3h":2.69
+      },
+      "dt":1485717216
+   },
+   {
+      "main":{
+         "temp":282.597,
+         "temp_min":282.597,
+         "temp_max":282.597,
+         "pressure":1012.12,
+         "sea_level":1019.71,
+         "grnd_level":1012.12,
+         "humidity":98
+      },
+      "wind":{
+         "speed":4.04,
+         "deg":226
+      },
+      "clouds":{
+         "all":92
+      },
+      "weather":[
+         {
+            "id":500,
+            "main":"Rain",
+            "description":"light rain",
+            "icon":"10n"
+         }
+      ],
+      "rain":{
+         "3h":0.405
+      },
+      "dt":1485745061
+   },
+   {
+      "main":{
+         "temp":279.38,
+         "pressure":1011,
+         "humidity":93,
+         "temp_min":278.15,
+         "temp_max":280.15
+      },
+      "wind":{
+         "speed":2.6,
+         "deg":30
+      },
+      "clouds":{
+         "all":90
+      },
+      "weather":[
+         {
+            "id":701,
+            "main":"Mist",
+            "description":"mist",
+            "icon":"50d"
+         },
+         {
+            "id":741,
+            "main":"Fog",
+            "description":"fog",
+            "icon":"50d"
+         }
+      ],
+      "dt":1485768552
+   }
+   ]
+}
+                        </code>
+                     </pre>
+              </div>
+            </div>
+            <div class="info-board info-board-orange">
+              There is a possibility to receive a central district of the city/town with its own parameters (geographic
+              coordinates/id/name) in API response. Please see the example below.
+            </div>
+            <div class="response">
+              <div class="api">
+                <code>
+                        https://history.openweathermap.org/data/2.5/history/city?q=Munchen,DE&appid=<a href="https://home.openweathermap.org/api_keys" target="_blank">{API key}</a>
+                     </code>
+              </div>
+              <div class="content">
+                <pre>
+                        <code class="json">
+{
+   "message":"",
+   "cod":"200",
+   "city_id":2643743,
+   "calctime":0.0875,
+   "cnt":3,
+   "list":[
+   {
+      "main":{
+         "temp":279.946,
+         "temp_min":279.946,
+         "temp_max":279.946,
+         "pressure":1016.76,
+         "sea_level":1024.45,
+         "grnd_level":1016.76,
+         "humidity":100
+      },
+      "wind":{
+         "speed":4.59,
+         "deg":163.001
+      },
+      "clouds":{
+         "all":92
+      },
+      "weather":[
+         {
+            "id":500,
+            "main":"Rain",
+            "description":"light rain",
+            "icon":"10n"
+         }
+      ],
+      "rain":{
+         "3h":2.69
+      },
+      "dt":1485717216
+   },
+   {
+      "main":{
+         "temp":282.597,
+         "temp_min":282.597,
+         "temp_max":282.597,
+         "pressure":1012.12,
+         "sea_level":1019.71,
+         "grnd_level":1012.12,
+         "humidity":98
+      },
+      "wind":{
+         "speed":4.04,
+         "deg":226
+      },
+      "clouds":{
+         "all":92
+      },
+      "weather":[
+         {
+            "id":500,
+            "main":"Rain",
+            "description":"light rain",
+            "icon":"10n"
+         }
+      ],
+      "rain":{
+         "3h":0.405
+      },
+      "dt":1485745061
+   },
+   {
+      "main":{
+         "temp":279.38,
+         "pressure":1011,
+         "humidity":93,
+         "temp_min":278.15,
+         "temp_max":280.15
+      },
+      "wind":{
+         "speed":2.6,
+         "deg":30
+      },
+      "clouds":{
+         "all":90
+      },
+      "weather":[
+         {
+            "id":701,
+            "main":"Mist",
+            "description":"mist",
+            "icon":"50d"
+         },
+         {
+            "id":741,
+            "main":"Fog",
+            "description":"fog",
+            "icon":"50d"
+         }
+      ],
+      "dt":1485768552
+   }
+   ]
+}
+                        </code>
+                     </pre>
+              </div>
+            </div>
+          </section>
+
+          <section id="cityid">
+            <h4>Built-in API request by city ID</h4>
+            <p>Call historical data by city ID. </p>
+            <p>The list of city IDs can be downloaded <a target="_blank"
+                href="https://bulk.openweathermap.org/sample/history.city.list.json.gz">here</a>.</p>
+            <p class="sub-header">API calls</p>
+            <div class="api">
+              <code>
+                     https://history.openweathermap.org/data/2.5/history/city?id={id}&type=hour&start={start}&end={end}&appid=<a href="https://home.openweathermap.org/api_keys" target="_blank">{API key}</a>
+                  </code>
+            </div>
+            <div class="api">
+              <code>
+                     https://history.openweathermap.org/data/2.5/history/city?id={id}&type=hour&start={start}&cnt={cnt}&appid=<a href="https://home.openweathermap.org/api_keys" target="_blank">{API key}</a>
+                  </code>
+            </div>
+            <table class="material-table">
+              <tr>
+                <th colspan="3">Parameters</th>
+              </tr>
+              <tr>
+                <td><code>id</code></td>
+                <td><span class="sub">required</span></td>
+                <td>City ID. The list of city IDs 'city.list.json.gz' can be downloaded <a
+                    href="https://bulk.openweathermap.org/sample/" target="_blank">here</a>.</td>
+              </tr>
+              <tr>
+                <td><code>type</code></td>
+                <td><span class="sub">required</span></td>
+                <td>Type of the call, keep this parameter in the API call as <code>hour</code></td>
+              </tr>
+              <tr>
+                <td><code>appid</code></td>
+                <td><span class="sub">required</span></td>
+                <td>Your unique API key (you can always find it on your account page under the <a
+                    href="https://home.openweathermap.org/api_keys" target="_blank">"API key" tab</a>)</td>
+              </tr>
+              <tr>
+                <td><code>start</code></td>
+                <td><span class="sub">optional</span></td>
+                <td>Start date (unix time, UTC time zone), e.g. start=1369728000</td>
+              </tr>
+              <tr>
+                <td><code>end</code></td>
+                <td><span class="sub">optional</span></td>
+                <td>End date (unix time, UTC time zone), e.g. end=1369789200</td>
+              </tr>
+              <tr>
+                <td><code>cnt</code></td>
+                <td><span class="sub">optional</span></td>
+                <td>Amount of returned data (one per hour, can be used instead of <code>end</code>)</td>
+              </tr>
+            </table>
+            <p class="sub-header">Example of API call</p>
+            <div class="response open">
+              <div class="api">
+                <code>
+                        https://history.openweathermap.org/data/2.5/history/city?id=2885679&type=hour&appid=<a href="https://home.openweathermap.org/api_keys" target="_blank">{API key}</a>
+                     </code>
+              </div>
+              <div class="content">
+                <pre>
+                        <code class="json">
+{
+   "message":"",
+   "cod":"200",
+   "city_id":2885679,
+   "calctime":0.0823,
+   "cnt":3,
+   "list":[
+   {
+      "main":{
+         "temp":266.052,
+         "temp_min":266.052,
+         "temp_max":266.052,
+         "pressure":957.86,
+         "sea_level":1039.34,
+         "grnd_level":957.86,
+         "humidity":90
+      },
+      "wind":{
+         "speed":1.16,
+         "deg":139.502
+      },
+      "clouds":{
+         "all":0
+      },
+      "weather":[
+         {
+            "id":800,
+            "main":"Clear",
+            "description":"Sky is Clear",
+            "icon":"01n"
+         }
+      ],
+      "dt":1485722804
+   },
+   {
+      "main":{
+         "temp":263.847,
+         "temp_min":263.847,
+         "temp_max":263.847,
+         "pressure":955.78,
+         "sea_level":1037.43,
+         "grnd_level":955.78,
+         "humidity":91
+      },
+      "wind":{
+         "speed":1.49,
+         "deg":159
+      },
+      "clouds":{
+         "all":0
+      },
+      "weather":[
+         {
+            "id":800,
+            "main":"Clear",
+            "description":"Sky is Clear",
+            "icon":"01n"
+         }
+      ],
+      "dt":1485749608
+   },
+   {
+      "main":{
+         "temp":274.9,
+         "pressure":1019,
+         "temp_min":274.15,
+         "temp_max":275.15,
+         "humidity":88
+      },
+      "wind":{
+         "speed":1,
+         "deg":0
+      },
+      "clouds":{
+         "all":76
+      },
+      "weather":[
+         {
+            "id":500,
+            "main":"Rain",
+            "description":"light rain",
+            "icon":"10d"
+         }
+      ],
+      "dt":1485773778
+   }
+   ]
+}
+                        </code>
+                     </pre>
+              </div>
+            </div>
+            <div class="info-board info-board-orange">
+              <b>Only for Professional and Expert plans: The maximum historical data depth in one API response is one
+                week.</b>
+              <p>If you specify a historical data depth more than one week in the request, you will receive a historical
+                data only for first week from start date in one API response.</p>
+              <p>If you want to get the historical data depth more than one week, then please use several queries.</p>
+            </div>
+          </section>
+        </section>
+        <section id="data">
+          <h3>Units of measurement</h3>
+          <p><code>standard</code>, <code>metric</code>, and <code>imperial</code> units are available. <a
+              href="/weather-data"> List of all API parameters with available units</a>.</p>
+          <table class="material-table">
+            <tr>
+              <th colspan="3">Parameters</th>
+            </tr>
+            <tr>
+              <td><code>units</code></td>
+              <td><span class="sub">optional</span></td>
+              <td><code>standard</code>, <code>metric</code>, <code>imperial</code>. When you do not use the
+                <code>units</code> parameter, format is <code>standard</code> by default.
+              </td>
+            </tr>
+          </table>
+          <p class="sub-header">Examples of API calls:</p>
+          <p>Standard (by default): temperature in Kelvin, wind speed in meter/sec</p>
+          <div class="response">
+            <div class="api">
+              <code>
+                     https://history.openweathermap.org/data/2.5/history/city?lat=41.85&lon=-87&type=hour&start=1643720400&end=1643806800&appid=<a href="https://home.openweathermap.org/api_keys" target="_blank">{API key}</a>
+                     </code>
+            </div>
+            <div class="content">
+              <pre>
+                <code class="json">
+{
+  "message": "Count: 25",
+  "cod": "200",
+  "city_id": 1,
+  "calctime": 0.005116476,
+  "cnt": 25,
+  "list": [
+    {
+      "dt": 1643720400,
+      "main": {
+        "temp": 274.07,
+        "feels_like": 268.79,
+        "pressure": 1014,
+        "humidity": 71,
+        "temp_min": 273,
+        "temp_max": 275.49
+      },
+      "wind": {
+        "speed": 6.17,
+        "deg": 170,
+        "gust": 10.29
+      },
+      "clouds": {
+        "all": 1
+      },
+      "weather": [
+        {
+          "id": 800,
+          "main": "Clear",
+          "description": "clear sky",
+          "icon": "01d"
+        }
+      ]
+    },
+    {
+      "dt": 1643724000,
+      "main": {
+        "temp": 275.18,
+        "feels_like": 270.2,
+        "pressure": 1013,
+        "humidity": 70,
+        "temp_min": 273.96,
+        "temp_max": 276.48
+      },
+      "wind": {
+        "speed": 6.17,
+        "deg": 180,
+        "gust": 9.77
+      },
+      "clouds": {
+        "all": 1
+      },
+      "weather": [
+        {
+          "id": 800,
+          "main": "Clear",
+          "description": "clear sky",
+          "icon": "01d"
+        }
+      ]
+    },
+    {
+      "dt": 1643727600,
+      "main": {
+        "temp": 277.38,
+        "feels_like": 272.79,
+        "pressure": 1013,
+        "humidity": 65,
+        "temp_min": 276.27,
+        "temp_max": 278.19
+      },
+      "wind": {
+        "speed": 6.69,
+        "deg": 200,
+        "gust": 10.29
+      },
+      "clouds": {
+        "all": 40
+      },
+      "weather": [
+        {
+          "id": 802,
+          "main": "Clouds",
+          "description": "scattered clouds",
+          "icon": "03d"
+        }
+      ]
+    },
+    {
+      "dt": 1643731200,
+      "main": {
+        "temp": 278.59,
+        "feels_like": 274.74,
+        "pressure": 1014,
+        "humidity": 62,
+        "temp_min": 277.49,
+        "temp_max": 280.14
+      },
+      "wind": {
+        "speed": 5.66,
+        "deg": 200,
+        "gust": 9.26
+      },
+      "clouds": {
+        "all": 40
+      },
+      "weather": [
+        {
+          "id": 802,
+          "main": "Clouds",
+          "description": "scattered clouds",
+          "icon": "03d"
+        }
+      ]
+    },
+    {
+      "dt": 1643734800,
+      "main": {
+        "temp": 279.18,
+        "feels_like": 275.1,
+        "pressure": 1014,
+        "humidity": 61,
+        "temp_min": 278.38,
+        "temp_max": 280.49
+      },
+      "wind": {
+        "speed": 6.69,
+        "deg": 190,
+        "gust": 9.77
+      },
+      "clouds": {
+        "all": 40
+      },
+      "weather": [
+        {
+          "id": 802,
+          "main": "Clouds",
+          "description": "scattered clouds",
+          "icon": "03d"
+        }
+      ]
+    },
+    {
+      "dt": 1643738400,
+      "main": {
+        "temp": 279.58,
+        "feels_like": 275.61,
+        "pressure": 1013,
+        "humidity": 65,
+        "temp_min": 278.27,
+        "temp_max": 281.44
+      },
+      "wind": {
+        "speed": 6.69,
+        "deg": 210,
+        "gust": 9.77
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 804,
+          "main": "Clouds",
+          "description": "overcast clouds",
+          "icon": "04d"
+        }
+      ]
+    },
+    {
+      "dt": 1643742000,
+      "main": {
+        "temp": 280.2,
+        "feels_like": 276.58,
+        "pressure": 1013,
+        "humidity": 61,
+        "temp_min": 279.27,
+        "temp_max": 281.51
+      },
+      "wind": {
+        "speed": 6.17,
+        "deg": 200,
+        "gust": 8.75
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 804,
+          "main": "Clouds",
+          "description": "overcast clouds",
+          "icon": "04d"
+        }
+      ]
+    },
+    {
+      "dt": 1643745600,
+      "main": {
+        "temp": 280.21,
+        "feels_like": 277,
+        "pressure": 1013,
+        "humidity": 61,
+        "temp_min": 279.13,
+        "temp_max": 281.51
+      },
+      "wind": {
+        "speed": 5.14,
+        "deg": 210,
+        "gust": 8.75
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 804,
+          "main": "Clouds",
+          "description": "overcast clouds",
+          "icon": "04d"
+        }
+      ]
+    },
+    {
+      "dt": 1643749200,
+      "main": {
+        "temp": 279.6,
+        "feels_like": 277.02,
+        "pressure": 1013,
+        "humidity": 70,
+        "temp_min": 278.69,
+        "temp_max": 280.73
+      },
+      "wind": {
+        "speed": 3.6,
+        "deg": 210
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 804,
+          "main": "Clouds",
+          "description": "overcast clouds",
+          "icon": "04d"
+        }
+      ]
+    },
+    {
+      "dt": 1643752800,
+      "main": {
+        "temp": 278.95,
+        "feels_like": 276.94,
+        "pressure": 1014,
+        "humidity": 80,
+        "temp_min": 277.82,
+        "temp_max": 280.75
+      },
+      "wind": {
+        "speed": 2.57,
+        "deg": 210
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 501,
+          "main": "Rain",
+          "description": "moderate rain",
+          "icon": "10d"
+        }
+      ],
+      "rain": {
+        "1h": 0.56
+      }
+    },
+    {
+      "dt": 1643756400,
+      "main": {
+        "temp": 278.15,
+        "feels_like": 275.59,
+        "pressure": 1015,
+        "humidity": 91,
+        "temp_min": 276.99,
+        "temp_max": 279.64
+      },
+      "wind": {
+        "speed": 3.09,
+        "deg": 210
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 301,
+          "main": "Drizzle",
+          "description": "drizzle",
+          "icon": "09d"
+        },
+        {
+          "id": 500,
+          "main": "Rain",
+          "description": "light rain",
+          "icon": "10d"
+        }
+      ],
+      "rain": {
+        "1h": 0.44
+      }
+    },
+    {
+      "dt": 1643760000,
+      "main": {
+        "temp": 277.64,
+        "feels_like": 276.46,
+        "pressure": 1016,
+        "humidity": 94,
+        "temp_min": 276.43,
+        "temp_max": 279.6
+      },
+      "wind": {
+        "speed": 1.54,
+        "deg": 240
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 301,
+          "main": "Drizzle",
+          "description": "drizzle",
+          "icon": "09n"
+        },
+        {
+          "id": 500,
+          "main": "Rain",
+          "description": "light rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 0.65
+      }
+    },
+    {
+      "dt": 1643763600,
+      "main": {
+        "temp": 277.18,
+        "feels_like": 275.94,
+        "pressure": 1017,
+        "humidity": 97,
+        "temp_min": 275.91,
+        "temp_max": 279.09
+      },
+      "wind": {
+        "speed": 1.54,
+        "deg": 250
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 501,
+          "main": "Rain",
+          "description": "moderate rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 2.51
+      }
+    },
+    {
+      "dt": 1643767200,
+      "main": {
+        "temp": 276.8,
+        "feels_like": 273.97,
+        "pressure": 1017,
+        "humidity": 98,
+        "temp_min": 275.35,
+        "temp_max": 277.95
+      },
+      "wind": {
+        "speed": 3.09,
+        "deg": 250
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 301,
+          "main": "Drizzle",
+          "description": "drizzle",
+          "icon": "09n"
+        },
+        {
+          "id": 500,
+          "main": "Rain",
+          "description": "light rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 0.98
+      }
+    },
+    {
+      "dt": 1643770800,
+      "main": {
+        "temp": 276.08,
+        "feels_like": 274.68,
+        "pressure": 1018,
+        "humidity": 99,
+        "temp_min": 274.8,
+        "temp_max": 277.97
+      },
+      "wind": {
+        "speed": 1.54,
+        "deg": 280
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 501,
+          "main": "Rain",
+          "description": "moderate rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 1.15
+      }
+    },
+    {
+      "dt": 1643774400,
+      "main": {
+        "temp": 275.8,
+        "feels_like": 275.8,
+        "pressure": 1018,
+        "humidity": 95,
+        "temp_min": 274.24,
+        "temp_max": 276.84
+      },
+      "wind": {
+        "speed": 0,
+        "deg": 0
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 500,
+          "main": "Rain",
+          "description": "light rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 0.56
+      }
+    },
+    {
+      "dt": 1643778000,
+      "main": {
+        "temp": 275.22,
+        "feels_like": 275.22,
+        "pressure": 1018,
+        "humidity": 95,
+        "temp_min": 273.69,
+        "temp_max": 276.73
+      },
+      "wind": {
+        "speed": 0,
+        "deg": 0
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 500,
+          "main": "Rain",
+          "description": "light rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 0.73
+      }
+    },
+    {
+      "dt": 1643781600,
+      "main": {
+        "temp": 274.15,
+        "feels_like": 270.77,
+        "pressure": 1018,
+        "humidity": 97,
+        "temp_min": 272.54,
+        "temp_max": 275.75
+      },
+      "wind": {
+        "speed": 3.09,
+        "deg": 340
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 0.95
+      }
+    },
+    {
+      "dt": 1643785200,
+      "main": {
+        "temp": 273.45,
+        "feels_like": 269.93,
+        "pressure": 1019,
+        "humidity": 98,
+        "temp_min": 272.48,
+        "temp_max": 275.49
+      },
+      "wind": {
+        "speed": 3.09,
+        "deg": 350
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 1.15
+      }
+    },
+    {
+      "dt": 1643788800,
+      "main": {
+        "temp": 273.28,
+        "feels_like": 270.21,
+        "pressure": 1020,
+        "humidity": 98,
+        "temp_min": 271.92,
+        "temp_max": 274.46
+      },
+      "wind": {
+        "speed": 2.57,
+        "deg": 350
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 2.42
+      }
+    },
+    {
+      "dt": 1643792400,
+      "main": {
+        "temp": 272.92,
+        "feels_like": 267.87,
+        "pressure": 1020,
+        "humidity": 96,
+        "temp_min": 270.91,
+        "temp_max": 274.46
+      },
+      "wind": {
+        "speed": 5.14,
+        "deg": 360,
+        "gust": 7.72
+      },
+      "clouds": {
+        "all": 100
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 1.15
+      }
+    },
+    {
+      "dt": 1643796000,
+      "main": {
+        "temp": 272.31,
+        "feels_like": 267.41,
+        "pressure": 1020,
+        "humidity": 98,
+        "temp_min": 270.81,
+        "temp_max": 273.91
+      },
+      "wind": {
+        "speed": 4.63,
+        "deg": 10
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 1.41
+      }
+    },
+    {
+      "dt": 1643799600,
+      "main": {
+        "temp": 272.07,
+        "feels_like": 267.45,
+        "pressure": 1020,
+        "humidity": 98,
+        "temp_min": 270.13,
+        "temp_max": 273.91
+      },
+      "wind": {
+        "speed": 4.12,
+        "deg": 20
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 0.92
+      }
+    },
+    {
+      "dt": 1643803200,
+      "main": {
+        "temp": 271.57,
+        "feels_like": 266.17,
+        "pressure": 1021,
+        "humidity": 96,
+        "temp_min": 269.7,
+        "temp_max": 273.35
+      },
+      "wind": {
+        "speed": 5.14,
+        "deg": 360,
+        "gust": 7.2
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 1.19
+      }
+    },
+    {
+      "dt": 1643806800,
+      "main": {
+        "temp": 271.36,
+        "feels_like": 266.23,
+        "pressure": 1021,
+        "humidity": 96,
+        "temp_min": 269.79,
+        "temp_max": 272.49
+      },
+      "wind": {
+        "speed": 4.63,
+        "deg": 360
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13d"
+        }
+      ],
+      "snow": {
+        "1h": 0.92
+      }
+    }
+  ]
+}
+                              </code>
+                           </pre>
+            </div>
+          </div>
+          <p>Metric: temperature in Celsius, wind speed in meter/sec</p>
+          <div class="response">
+            <div class="api">
+              <code>
+                     https://history.openweathermap.org/data/2.5/history/city?lat=41.85&lon=-87&type=hour&start=1643720400&end=1643806800&units=metric&appid=<a href="https://home.openweathermap.org/api_keys" target="_blank">{API key}</a>
+                     </code>
+            </div>
+            <div class="content">
+              <pre>
+                              <code class="json">
+  {
+  "message": "Count: 25",
+  "cod": "200",
+  "city_id": 1,
+  "calctime": 0.004968346,
+  "cnt": 25,
+  "list": [
+    {
+      "dt": 1643720400,
+      "main": {
+        "temp": 0.92,
+        "feels_like": -4.36,
+        "pressure": 1014,
+        "humidity": 71,
+        "temp_min": -0.15,
+        "temp_max": 2.34
+      },
+      "wind": {
+        "speed": 6.17,
+        "deg": 170,
+        "gust": 10.29
+      },
+      "clouds": {
+        "all": 1
+      },
+      "weather": [
+        {
+          "id": 800,
+          "main": "Clear",
+          "description": "clear sky",
+          "icon": "01d"
+        }
+      ]
+    },
+    {
+      "dt": 1643724000,
+      "main": {
+        "temp": 2.03,
+        "feels_like": -2.95,
+        "pressure": 1013,
+        "humidity": 70,
+        "temp_min": 0.81,
+        "temp_max": 3.33
+      },
+      "wind": {
+        "speed": 6.17,
+        "deg": 180,
+        "gust": 9.77
+      },
+      "clouds": {
+        "all": 1
+      },
+      "weather": [
+        {
+          "id": 800,
+          "main": "Clear",
+          "description": "clear sky",
+          "icon": "01d"
+        }
+      ]
+    },
+    {
+      "dt": 1643727600,
+      "main": {
+        "temp": 4.23,
+        "feels_like": -0.36,
+        "pressure": 1013,
+        "humidity": 65,
+        "temp_min": 3.12,
+        "temp_max": 5.04
+      },
+      "wind": {
+        "speed": 6.69,
+        "deg": 200,
+        "gust": 10.29
+      },
+      "clouds": {
+        "all": 40
+      },
+      "weather": [
+        {
+          "id": 802,
+          "main": "Clouds",
+          "description": "scattered clouds",
+          "icon": "03d"
+        }
+      ]
+    },
+    {
+      "dt": 1643731200,
+      "main": {
+        "temp": 5.44,
+        "feels_like": 1.59,
+        "pressure": 1014,
+        "humidity": 62,
+        "temp_min": 4.34,
+        "temp_max": 6.99
+      },
+      "wind": {
+        "speed": 5.66,
+        "deg": 200,
+        "gust": 9.26
+      },
+      "clouds": {
+        "all": 40
+      },
+      "weather": [
+        {
+          "id": 802,
+          "main": "Clouds",
+          "description": "scattered clouds",
+          "icon": "03d"
+        }
+      ]
+    },
+    {
+      "dt": 1643734800,
+      "main": {
+        "temp": 6.03,
+        "feels_like": 1.95,
+        "pressure": 1014,
+        "humidity": 61,
+        "temp_min": 5.23,
+        "temp_max": 7.34
+      },
+      "wind": {
+        "speed": 6.69,
+        "deg": 190,
+        "gust": 9.77
+      },
+      "clouds": {
+        "all": 40
+      },
+      "weather": [
+        {
+          "id": 802,
+          "main": "Clouds",
+          "description": "scattered clouds",
+          "icon": "03d"
+        }
+      ]
+    },
+    {
+      "dt": 1643738400,
+      "main": {
+        "temp": 6.43,
+        "feels_like": 2.46,
+        "pressure": 1013,
+        "humidity": 65,
+        "temp_min": 5.12,
+        "temp_max": 8.29
+      },
+      "wind": {
+        "speed": 6.69,
+        "deg": 210,
+        "gust": 9.77
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 804,
+          "main": "Clouds",
+          "description": "overcast clouds",
+          "icon": "04d"
+        }
+      ]
+    },
+    {
+      "dt": 1643742000,
+      "main": {
+        "temp": 7.05,
+        "feels_like": 3.43,
+        "pressure": 1013,
+        "humidity": 61,
+        "temp_min": 6.12,
+        "temp_max": 8.36
+      },
+      "wind": {
+        "speed": 6.17,
+        "deg": 200,
+        "gust": 8.75
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 804,
+          "main": "Clouds",
+          "description": "overcast clouds",
+          "icon": "04d"
+        }
+      ]
+    },
+    {
+      "dt": 1643745600,
+      "main": {
+        "temp": 7.06,
+        "feels_like": 3.85,
+        "pressure": 1013,
+        "humidity": 61,
+        "temp_min": 5.98,
+        "temp_max": 8.36
+      },
+      "wind": {
+        "speed": 5.14,
+        "deg": 210,
+        "gust": 8.75
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 804,
+          "main": "Clouds",
+          "description": "overcast clouds",
+          "icon": "04d"
+        }
+      ]
+    },
+    {
+      "dt": 1643749200,
+      "main": {
+        "temp": 6.45,
+        "feels_like": 3.87,
+        "pressure": 1013,
+        "humidity": 70,
+        "temp_min": 5.54,
+        "temp_max": 7.58
+      },
+      "wind": {
+        "speed": 3.6,
+        "deg": 210
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 804,
+          "main": "Clouds",
+          "description": "overcast clouds",
+          "icon": "04d"
+        }
+      ]
+    },
+    {
+      "dt": 1643752800,
+      "main": {
+        "temp": 5.8,
+        "feels_like": 3.79,
+        "pressure": 1014,
+        "humidity": 80,
+        "temp_min": 4.67,
+        "temp_max": 7.6
+      },
+      "wind": {
+        "speed": 2.57,
+        "deg": 210
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 501,
+          "main": "Rain",
+          "description": "moderate rain",
+          "icon": "10d"
+        }
+      ],
+      "rain": {
+        "1h": 0.56
+      }
+    },
+    {
+      "dt": 1643756400,
+      "main": {
+        "temp": 5,
+        "feels_like": 2.44,
+        "pressure": 1015,
+        "humidity": 91,
+        "temp_min": 3.84,
+        "temp_max": 6.49
+      },
+      "wind": {
+        "speed": 3.09,
+        "deg": 210
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 301,
+          "main": "Drizzle",
+          "description": "drizzle",
+          "icon": "09d"
+        },
+        {
+          "id": 500,
+          "main": "Rain",
+          "description": "light rain",
+          "icon": "10d"
+        }
+      ],
+      "rain": {
+        "1h": 0.44
+      }
+    },
+    {
+      "dt": 1643760000,
+      "main": {
+        "temp": 4.49,
+        "feels_like": 3.31,
+        "pressure": 1016,
+        "humidity": 94,
+        "temp_min": 3.28,
+        "temp_max": 6.45
+      },
+      "wind": {
+        "speed": 1.54,
+        "deg": 240
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 301,
+          "main": "Drizzle",
+          "description": "drizzle",
+          "icon": "09n"
+        },
+        {
+          "id": 500,
+          "main": "Rain",
+          "description": "light rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 0.65
+      }
+    },
+    {
+      "dt": 1643763600,
+      "main": {
+        "temp": 4.03,
+        "feels_like": 2.79,
+        "pressure": 1017,
+        "humidity": 97,
+        "temp_min": 2.76,
+        "temp_max": 5.94
+      },
+      "wind": {
+        "speed": 1.54,
+        "deg": 250
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 501,
+          "main": "Rain",
+          "description": "moderate rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 2.51
+      }
+    },
+    {
+      "dt": 1643767200,
+      "main": {
+        "temp": 3.65,
+        "feels_like": 0.82,
+        "pressure": 1017,
+        "humidity": 98,
+        "temp_min": 2.2,
+        "temp_max": 4.8
+      },
+      "wind": {
+        "speed": 3.09,
+        "deg": 250
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 301,
+          "main": "Drizzle",
+          "description": "drizzle",
+          "icon": "09n"
+        },
+        {
+          "id": 500,
+          "main": "Rain",
+          "description": "light rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 0.98
+      }
+    },
+    {
+      "dt": 1643770800,
+      "main": {
+        "temp": 2.93,
+        "feels_like": 1.53,
+        "pressure": 1018,
+        "humidity": 99,
+        "temp_min": 1.65,
+        "temp_max": 4.82
+      },
+      "wind": {
+        "speed": 1.54,
+        "deg": 280
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 501,
+          "main": "Rain",
+          "description": "moderate rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 1.15
+      }
+    },
+    {
+      "dt": 1643774400,
+      "main": {
+        "temp": 2.65,
+        "feels_like": 2.65,
+        "pressure": 1018,
+        "humidity": 95,
+        "temp_min": 1.09,
+        "temp_max": 3.69
+      },
+      "wind": {
+        "speed": 0,
+        "deg": 0
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 500,
+          "main": "Rain",
+          "description": "light rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 0.56
+      }
+    },
+    {
+      "dt": 1643778000,
+      "main": {
+        "temp": 2.07,
+        "feels_like": 2.07,
+        "pressure": 1018,
+        "humidity": 95,
+        "temp_min": 0.54,
+        "temp_max": 3.58
+      },
+      "wind": {
+        "speed": 0,
+        "deg": 0
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 500,
+          "main": "Rain",
+          "description": "light rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 0.73
+      }
+    },
+    {
+      "dt": 1643781600,
+      "main": {
+        "temp": 1,
+        "feels_like": -2.38,
+        "pressure": 1018,
+        "humidity": 97,
+        "temp_min": -0.61,
+        "temp_max": 2.6
+      },
+      "wind": {
+        "speed": 3.09,
+        "deg": 340
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 0.95
+      }
+    },
+    {
+      "dt": 1643785200,
+      "main": {
+        "temp": 0.3,
+        "feels_like": -3.22,
+        "pressure": 1019,
+        "humidity": 98,
+        "temp_min": -0.67,
+        "temp_max": 2.34
+      },
+      "wind": {
+        "speed": 3.09,
+        "deg": 350
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 1.15
+      }
+    },
+    {
+      "dt": 1643788800,
+      "main": {
+        "temp": 0.13,
+        "feels_like": -2.94,
+        "pressure": 1020,
+        "humidity": 98,
+        "temp_min": -1.23,
+        "temp_max": 1.31
+      },
+      "wind": {
+        "speed": 2.57,
+        "deg": 350
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 2.42
+      }
+    },
+    {
+      "dt": 1643792400,
+      "main": {
+        "temp": -0.23,
+        "feels_like": -5.28,
+        "pressure": 1020,
+        "humidity": 96,
+        "temp_min": -2.24,
+        "temp_max": 1.31
+      },
+      "wind": {
+        "speed": 5.14,
+        "deg": 360,
+        "gust": 7.72
+      },
+      "clouds": {
+        "all": 100
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 1.15
+      }
+    },
+    {
+      "dt": 1643796000,
+      "main": {
+        "temp": -0.84,
+        "feels_like": -5.74,
+        "pressure": 1020,
+        "humidity": 98,
+        "temp_min": -2.34,
+        "temp_max": 0.76
+      },
+      "wind": {
+        "speed": 4.63,
+        "deg": 10
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 1.41
+      }
+    },
+    {
+      "dt": 1643799600,
+      "main": {
+        "temp": -1.08,
+        "feels_like": -5.7,
+        "pressure": 1020,
+        "humidity": 98,
+        "temp_min": -3.02,
+        "temp_max": 0.76
+      },
+      "wind": {
+        "speed": 4.12,
+        "deg": 20
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 0.92
+      }
+    },
+    {
+      "dt": 1643803200,
+      "main": {
+        "temp": -1.58,
+        "feels_like": -6.98,
+        "pressure": 1021,
+        "humidity": 96,
+        "temp_min": -3.45,
+        "temp_max": 0.2
+      },
+      "wind": {
+        "speed": 5.14,
+        "deg": 360,
+        "gust": 7.2
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 1.19
+      }
+    },
+    {
+      "dt": 1643806800,
+      "main": {
+        "temp": -1.79,
+        "feels_like": -6.92,
+        "pressure": 1021,
+        "humidity": 96,
+        "temp_min": -3.36,
+        "temp_max": -0.66
+      },
+      "wind": {
+        "speed": 4.63,
+        "deg": 360
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13d"
+        }
+      ],
+      "snow": {
+        "1h": 0.92
+      }
+    }
+  ]
+}
+                              </code>
+                           </pre>
+            </div>
+          </div>
+          <p>Imperial: temperature in Fahrenheit, wind speed in miles/hour</p>
+          <div class="response">
+            <div class="api">
+              <code>
+                     https://history.openweathermap.org/data/2.5/history/city?lat=41.85&lon=-87&type=hour&start=1643720400&end=1643806800&units=imperial&appid=<a href="https://home.openweathermap.org/api_keys" target="_blank">{API key}</a>
+                     </code>
+            </div>
+            <div class="content">
+              <pre>
+                              <code class="json">
+  {
+  "message": "Count: 25",
+  "cod": "200",
+  "city_id": 1,
+  "calctime": 0.004813836,
+  "cnt": 25,
+  "list": [
+    {
+      "dt": 1643720400,
+      "main": {
+        "temp": 33.66,
+        "feels_like": 24.15,
+        "pressure": 1014,
+        "humidity": 71,
+        "temp_min": 31.73,
+        "temp_max": 36.21
+      },
+      "wind": {
+        "speed": 13.8,
+        "deg": 170,
+        "gust": 23.02
+      },
+      "clouds": {
+        "all": 1
+      },
+      "weather": [
+        {
+          "id": 800,
+          "main": "Clear",
+          "description": "clear sky",
+          "icon": "01d"
+        }
+      ]
+    },
+    {
+      "dt": 1643724000,
+      "main": {
+        "temp": 35.65,
+        "feels_like": 26.69,
+        "pressure": 1013,
+        "humidity": 70,
+        "temp_min": 33.46,
+        "temp_max": 37.99
+      },
+      "wind": {
+        "speed": 13.8,
+        "deg": 180,
+        "gust": 21.85
+      },
+      "clouds": {
+        "all": 1
+      },
+      "weather": [
+        {
+          "id": 800,
+          "main": "Clear",
+          "description": "clear sky",
+          "icon": "01d"
+        }
+      ]
+    },
+    {
+      "dt": 1643727600,
+      "main": {
+        "temp": 39.61,
+        "feels_like": 31.35,
+        "pressure": 1013,
+        "humidity": 65,
+        "temp_min": 37.62,
+        "temp_max": 41.07
+      },
+      "wind": {
+        "speed": 14.97,
+        "deg": 200,
+        "gust": 23.02
+      },
+      "clouds": {
+        "all": 40
+      },
+      "weather": [
+        {
+          "id": 802,
+          "main": "Clouds",
+          "description": "scattered clouds",
+          "icon": "03d"
+        }
+      ]
+    },
+    {
+      "dt": 1643731200,
+      "main": {
+        "temp": 41.79,
+        "feels_like": 34.86,
+        "pressure": 1014,
+        "humidity": 62,
+        "temp_min": 39.81,
+        "temp_max": 44.58
+      },
+      "wind": {
+        "speed": 12.66,
+        "deg": 200,
+        "gust": 20.71
+      },
+      "clouds": {
+        "all": 40
+      },
+      "weather": [
+        {
+          "id": 802,
+          "main": "Clouds",
+          "description": "scattered clouds",
+          "icon": "03d"
+        }
+      ]
+    },
+    {
+      "dt": 1643734800,
+      "main": {
+        "temp": 42.85,
+        "feels_like": 35.51,
+        "pressure": 1014,
+        "humidity": 61,
+        "temp_min": 41.41,
+        "temp_max": 45.21
+      },
+      "wind": {
+        "speed": 14.97,
+        "deg": 190,
+        "gust": 21.85
+      },
+      "clouds": {
+        "all": 40
+      },
+      "weather": [
+        {
+          "id": 802,
+          "main": "Clouds",
+          "description": "scattered clouds",
+          "icon": "03d"
+        }
+      ]
+    },
+    {
+      "dt": 1643738400,
+      "main": {
+        "temp": 43.57,
+        "feels_like": 36.43,
+        "pressure": 1013,
+        "humidity": 65,
+        "temp_min": 41.22,
+        "temp_max": 46.92
+      },
+      "wind": {
+        "speed": 14.97,
+        "deg": 210,
+        "gust": 21.85
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 804,
+          "main": "Clouds",
+          "description": "overcast clouds",
+          "icon": "04d"
+        }
+      ]
+    },
+    {
+      "dt": 1643742000,
+      "main": {
+        "temp": 44.69,
+        "feels_like": 38.17,
+        "pressure": 1013,
+        "humidity": 61,
+        "temp_min": 43.02,
+        "temp_max": 47.05
+      },
+      "wind": {
+        "speed": 13.8,
+        "deg": 200,
+        "gust": 19.57
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 804,
+          "main": "Clouds",
+          "description": "overcast clouds",
+          "icon": "04d"
+        }
+      ]
+    },
+    {
+      "dt": 1643745600,
+      "main": {
+        "temp": 44.71,
+        "feels_like": 38.93,
+        "pressure": 1013,
+        "humidity": 61,
+        "temp_min": 42.76,
+        "temp_max": 47.05
+      },
+      "wind": {
+        "speed": 11.5,
+        "deg": 210,
+        "gust": 19.57
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 804,
+          "main": "Clouds",
+          "description": "overcast clouds",
+          "icon": "04d"
+        }
+      ]
+    },
+    {
+      "dt": 1643749200,
+      "main": {
+        "temp": 43.61,
+        "feels_like": 38.97,
+        "pressure": 1013,
+        "humidity": 70,
+        "temp_min": 41.97,
+        "temp_max": 45.64
+      },
+      "wind": {
+        "speed": 8.05,
+        "deg": 210
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 804,
+          "main": "Clouds",
+          "description": "overcast clouds",
+          "icon": "04d"
+        }
+      ]
+    },
+    {
+      "dt": 1643752800,
+      "main": {
+        "temp": 42.44,
+        "feels_like": 38.82,
+        "pressure": 1014,
+        "humidity": 80,
+        "temp_min": 40.41,
+        "temp_max": 45.68
+      },
+      "wind": {
+        "speed": 5.75,
+        "deg": 210
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 501,
+          "main": "Rain",
+          "description": "moderate rain",
+          "icon": "10d"
+        }
+      ],
+      "rain": {
+        "1h": 0.56
+      }
+    },
+    {
+      "dt": 1643756400,
+      "main": {
+        "temp": 41,
+        "feels_like": 36.39,
+        "pressure": 1015,
+        "humidity": 91,
+        "temp_min": 38.91,
+        "temp_max": 43.68
+      },
+      "wind": {
+        "speed": 6.91,
+        "deg": 210
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 301,
+          "main": "Drizzle",
+          "description": "drizzle",
+          "icon": "09d"
+        },
+        {
+          "id": 500,
+          "main": "Rain",
+          "description": "light rain",
+          "icon": "10d"
+        }
+      ],
+      "rain": {
+        "1h": 0.44
+      }
+    },
+    {
+      "dt": 1643760000,
+      "main": {
+        "temp": 40.08,
+        "feels_like": 37.96,
+        "pressure": 1016,
+        "humidity": 94,
+        "temp_min": 37.9,
+        "temp_max": 43.61
+      },
+      "wind": {
+        "speed": 3.44,
+        "deg": 240
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 301,
+          "main": "Drizzle",
+          "description": "drizzle",
+          "icon": "09n"
+        },
+        {
+          "id": 500,
+          "main": "Rain",
+          "description": "light rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 0.65
+      }
+    },
+    {
+      "dt": 1643763600,
+      "main": {
+        "temp": 39.25,
+        "feels_like": 37.02,
+        "pressure": 1017,
+        "humidity": 97,
+        "temp_min": 36.97,
+        "temp_max": 42.69
+      },
+      "wind": {
+        "speed": 3.44,
+        "deg": 250
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 501,
+          "main": "Rain",
+          "description": "moderate rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 2.51
+      }
+    },
+    {
+      "dt": 1643767200,
+      "main": {
+        "temp": 38.57,
+        "feels_like": 33.48,
+        "pressure": 1017,
+        "humidity": 98,
+        "temp_min": 35.96,
+        "temp_max": 40.64
+      },
+      "wind": {
+        "speed": 6.91,
+        "deg": 250
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 301,
+          "main": "Drizzle",
+          "description": "drizzle",
+          "icon": "09n"
+        },
+        {
+          "id": 500,
+          "main": "Rain",
+          "description": "light rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 0.98
+      }
+    },
+    {
+      "dt": 1643770800,
+      "main": {
+        "temp": 37.27,
+        "feels_like": 34.75,
+        "pressure": 1018,
+        "humidity": 99,
+        "temp_min": 34.97,
+        "temp_max": 40.68
+      },
+      "wind": {
+        "speed": 3.44,
+        "deg": 280
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 501,
+          "main": "Rain",
+          "description": "moderate rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 1.15
+      }
+    },
+    {
+      "dt": 1643774400,
+      "main": {
+        "temp": 36.77,
+        "feels_like": 36.77,
+        "pressure": 1018,
+        "humidity": 95,
+        "temp_min": 33.96,
+        "temp_max": 38.64
+      },
+      "wind": {
+        "speed": 0,
+        "deg": 0
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 500,
+          "main": "Rain",
+          "description": "light rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 0.56
+      }
+    },
+    {
+      "dt": 1643778000,
+      "main": {
+        "temp": 35.73,
+        "feels_like": 35.73,
+        "pressure": 1018,
+        "humidity": 95,
+        "temp_min": 32.97,
+        "temp_max": 38.44
+      },
+      "wind": {
+        "speed": 0,
+        "deg": 0
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 500,
+          "main": "Rain",
+          "description": "light rain",
+          "icon": "10n"
+        }
+      ],
+      "rain": {
+        "1h": 0.73
+      }
+    },
+    {
+      "dt": 1643781600,
+      "main": {
+        "temp": 33.8,
+        "feels_like": 27.72,
+        "pressure": 1018,
+        "humidity": 97,
+        "temp_min": 30.9,
+        "temp_max": 36.68
+      },
+      "wind": {
+        "speed": 6.91,
+        "deg": 340
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 0.95
+      }
+    },
+    {
+      "dt": 1643785200,
+      "main": {
+        "temp": 32.54,
+        "feels_like": 26.2,
+        "pressure": 1019,
+        "humidity": 98,
+        "temp_min": 30.79,
+        "temp_max": 36.21
+      },
+      "wind": {
+        "speed": 6.91,
+        "deg": 350
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 1.15
+      }
+    },
+    {
+      "dt": 1643788800,
+      "main": {
+        "temp": 32.23,
+        "feels_like": 26.71,
+        "pressure": 1020,
+        "humidity": 98,
+        "temp_min": 29.79,
+        "temp_max": 34.36
+      },
+      "wind": {
+        "speed": 5.75,
+        "deg": 350
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 2.42
+      }
+    },
+    {
+      "dt": 1643792400,
+      "main": {
+        "temp": 31.59,
+        "feels_like": 22.5,
+        "pressure": 1020,
+        "humidity": 96,
+        "temp_min": 27.97,
+        "temp_max": 34.36
+      },
+      "wind": {
+        "speed": 11.5,
+        "deg": 360,
+        "gust": 17.27
+      },
+      "clouds": {
+        "all": 100
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 1.15
+      }
+    },
+    {
+      "dt": 1643796000,
+      "main": {
+        "temp": 30.49,
+        "feels_like": 21.67,
+        "pressure": 1020,
+        "humidity": 98,
+        "temp_min": 27.79,
+        "temp_max": 33.37
+      },
+      "wind": {
+        "speed": 10.36,
+        "deg": 10
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 1.41
+      }
+    },
+    {
+      "dt": 1643799600,
+      "main": {
+        "temp": 30.06,
+        "feels_like": 21.74,
+        "pressure": 1020,
+        "humidity": 98,
+        "temp_min": 26.56,
+        "temp_max": 33.37
+      },
+      "wind": {
+        "speed": 9.22,
+        "deg": 20
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 0.92
+      }
+    },
+    {
+      "dt": 1643803200,
+      "main": {
+        "temp": 29.16,
+        "feels_like": 19.44,
+        "pressure": 1021,
+        "humidity": 96,
+        "temp_min": 25.79,
+        "temp_max": 32.36
+      },
+      "wind": {
+        "speed": 11.5,
+        "deg": 360,
+        "gust": 16.11
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13n"
+        }
+      ],
+      "snow": {
+        "1h": 1.19
+      }
+    },
+    {
+      "dt": 1643806800,
+      "main": {
+        "temp": 28.78,
+        "feels_like": 19.54,
+        "pressure": 1021,
+        "humidity": 96,
+        "temp_min": 25.95,
+        "temp_max": 30.81
+      },
+      "wind": {
+        "speed": 10.36,
+        "deg": 360
+      },
+      "clouds": {
+        "all": 90
+      },
+      "weather": [
+        {
+          "id": 601,
+          "main": "Snow",
+          "description": "snow",
+          "icon": "13d"
+        }
+      ],
+      "snow": {
+        "1h": 0.92
+      }
+    }
+  ]
+}
+                              </code>
+                           </pre>
+            </div>
+          </div>
+        </section>
+      </section>
+    </div>
+  </div>
+</div>  </main>
+  <div id="footer-website" onClick="toggleFooterSection(event)">
+   <div class="inner-footer-container">
+      <div class="horizontal-section">
+         <div class="footer-section">
+            <p class="section-heading">Product Collections</p>
+            <div class="section-content">
+               <ul>
+                  <li><a href="/api#current">Current and Forecast APIs</a></li>
+                  <li><a href="/api#history">Historical Weather Data</a></li>
+                  <li><a href="/api#maps">Weather Maps</a></li>
+                  <li><a href="https://dashboard.openweather.co.uk/" target="_blank">Weather Dashboard</a></li>
+                  <li><a href="/widgets-constructor">Widgets</a></li>
+               </ul>
+            </div>
+         </div>
+         <div class="footer-section">
+            <p class="section-heading">Subscription</p>
+            <div class="section-content">
+               <ul>
+                  <li><a href="/appid">How to start</a></li>
+                  <li><a href="/price">Pricing</a></li>
+                  <li><a href="https://home.openweathermap.org/users/sign_up">Subscribe for free</a></li>
+                  <li><a href="/faq">FAQ</a></li>
+               </ul>
+            </div>
+         </div>
+         <div class="footer-section">
+            <p class="section-heading">Company</p>
+            <div class="section-content">
+               <p>OpenWeather is a team of IT experts and data scientists that has been practising deep weather data
+                  science. For each point on the globe, OpenWeather provides historical, current and forecasted weather
+                  data via light-speed APIs. Headquarters in London, UK.</p>
+            </div>
+         </div>
+      </div>
+      <div class="horizontal-section">
+         <div class="footer-section">
+            <p class="section-heading">Technologies</p>
+            <div class="section-content">
+               <ul>
+                  <li><a href="/technology">Our technology</a></li>
+                  <li><a href="/accuracy-and-quality">Accuracy and quality of weather data</a></li>
+                  <li><a href="/stations">Connect your weather station</a></li>
+               </ul>
+            </div>
+         </div>
+         <div class="footer-section">
+            <p class="section-heading">Terms & Conditions</p>
+            <div class="section-content">
+               <ul>
+                  <li><a href="/themes/openweathermap/assets/docs/OpenWeather_T&C_of_sale.pdf"
+                        target="_blank">Terms and conditions of sale</a></li>
+                  <li><a href="https://openweather.co.uk/privacy-policy" target="_blank">Privacy Policy</a></li>
+                  <li><a href="/themes/openweathermap/assets/docs/Openweather_website_terms_and_conditions_of_use.pdf"
+                        target="_blank">Website terms and conditions</a></li>
+               </ul>
+            </div>
+         </div>
+         <div class="footer-section not-foldable">
+            <!-- <p class="section-heading">Contact us</p> -->
+            <div class="section-content">
+               <ul>
+                  <li><a href="/about-us" target="_blank">About us</a></li>
+                  <li><a href="https://openweather.co.uk/about/our-offices" target="_blank">Our offices</a></li>
+                  <li><a href="https://openweather.co.uk/blog" target="_blank">Blog</a></li>
+                  <li><a href="https://openweather.co.uk/" target="_blank">OpenWeather for Business</a></li>
+                  <li><a href="/chat">Ulla, OpenWeather AI assistant</a></li>
+                  <li><a href="https://home.openweathermap.org/questions" target="_blank">Ask a question</a></li>
+                  <!--  <li><a href="mailto:info@openweathermap.org">info@openweathermap.org</a>  -->
+               </ul>
+            </div>
+         </div>
+      </div>
+
+      <div class="horizontal-section">
+         <div class="footer-section">
+            <div class="my-5">
+               <p>Download OpenWeather app</p>
+               <div>
+                  <a href="https://apps.apple.com/gb/app/openweather/id1535923697" target="_blank">
+                     <img src="/themes/openweathermap/assets/img/mobile_app/app-store-badge.svg"
+                        alt='Get it on AppStore'>
+                  </a>
+                  <a href="https://play.google.com/store/apps/details?id=uk.co.openweather" target="_blank">
+                     <img src="/themes/openweathermap/assets/img/mobile_app/google-play-badge.png"
+                        class="google-play-img" alt='Get it on Google Play'>
+                  </a>
+               </div>
+               <div>
+               <a href="https://discord.com/invite/YyPZCXb4Jq" target="_blank">
+                  <img src="/themes/openweathermap/assets/img/discord.svg" alt="Discord" width="100" height="100" />
+               </a>
+               </div>
+            </div>
+         </div>
+         <div class="footer-section">
+            <div class="my-5 logo-blocks">
+               <img src="/themes/openweathermap/assets/img/RMets_Logo_corp.png" width="200" height="70"
+                  alt="RMets logo">
+               <img src="/themes/openweathermap/assets/img/CNB_Business_Logo_2024.png" alt="CNB Business logo"
+                  width="170" height="170">
+            </div>
+
+            <div class="my-5 logo-blocks">
+               <img src="/themes/openweathermap/assets/img/iso-9001.png" width="170" height="170" alt="ISO 9001 certification">
+               <img src="/themes/openweathermap/assets/img/iso-27001.png" width="170" height="170" alt="ISO 27001 certification">
+            </div>
+         </div>
+      </div>
+
+      <div class="horizontal-section my-5">
+         <div>
+            <span>Supplier of Achilles UVDB community</span><br>
+            <span id="years-copyright"></span><br><br>
+         </div>
+         <div class="social">
+            <a href="https://www.facebook.com/groups/270748973021342" target="_blank"><img
+                  src="/themes/openweathermap/assets/img/owm_icons/icon_facebook.png" alt="facebook icon"></a>
+            <a href="https://twitter.com/OpenWeatherMap" target="_blank"><img
+                  src="/themes/openweathermap/assets/img/owm_icons/icon_x_black.png" alt="x icon"></a>
+            <a href="https://www.linkedin.com/company/9816754" target="_blank"><img
+                  src="/themes/openweathermap/assets/img/owm_icons/icon_linkedin.png" alt="linkedin icon "></a>
+            <a href="https://medium.com/@openweathermap" target="_blank"><img
+                  src="/themes/openweathermap/assets/img/owm_icons/new_medium.svg" alt="meduim icon"></a>
+            <a href="https://t.me/openweathermap" target="_blank"><img
+                  src="/themes/openweathermap/assets/img/owm_icons/icon_telegram.png" alt="telegram icon"></a>
+            <a href="https://github.com/openweathermap" target="_blank"><img
+                  src="/themes/openweathermap/assets/img/owm_icons/icon_github.png" alt="github icon"></a>
+         </div>
+      </div>
+      <div class="horizontal-section"></div>
+   </div>
+</div>  <script src="https://cdn.ravenjs.com/3.6.1/raven.min.js"></script>
+<script>Raven.config('http://66df88eb63e94f27964b84031e49b358@sentry.owm.io/16').install()</script>  <script src='/themes/openweathermap/assets/js/bundle_owm_postload.c31872127471c475ade1.js'></script>
+<script src="/themes/openweathermap/assets/js/advertising.js"></script>      <div class="gdpr-banner">
+        <div class="gdpr-banner__wrapper">
+            <div class="gdpr-banner__column gdpr-banner__column--1">
+    <div class="gdpr-banner__row">
+        <div class="gdpr-banner__message">
+    We use cookies to personalize content and to analyze our traffic. Please decide if you are willing to accept cookies from our website.
+</div>    </div>
+</div>
+<div class="gdpr-banner__column gdpr-banner__column--2">
+        <div class="gdpr-banner__settings">
+        <a role="link" rel="privacy" href="https://openweathermap.org/cookies"
+           data-request="onDecline"
+           data-request-success="document.location.href = 'https://openweathermap.org/cookies'"
+        >
+            Advanced Settings
+        </a>
+    </div>
+    <div class="gdpr-banner__opt-out">
+    <button role="button" 
+         tabindex="0" 
+         aria-pressed="false"
+         class="gdpr-banner__button gdpr-banner__button--opt-out"
+         data-request="onDecline"
+         data-request-success="document.querySelector('.gdpr-banner').remove()"
+    >
+        Decline
+    </button>
+</div>    <div class="gdpr-banner__opt-in">
+    <button role="button" 
+            tabindex="0" 
+            aria-pressed="false"
+            class="gdpr-banner__button gdpr-banner__button--opt-in"
+            data-request="onAccept"
+            data-request-success="document.querySelector('.gdpr-banner').remove()"
+            data-request-update="'gtag' : '#gdpr-reload'"
+    >
+        Accept
+    </button>
+</div>
+    <div class="gdpr-banner__dismiss">
+    <button role="button" 
+      tabindex="0" 
+      aria-pressed="false"
+      class="gdpr-banner__button--dismiss"
+      onclick="document.querySelector('.gdpr-banner').remove()">&times;</button>
+</div></div>        </div>
+    </div>
+  <div id="ulla-banner">
+    <div class="close-btn" id="ulla-banner-close" title="Close banner"></div>
+    <a href="https://ulla.bot/notetaker?utm_source=owm_site&utm_medium=banner&utm_campaign=sept" target="_blank">
+        <img src="/themes/openweathermap/assets/img/ulla_banner.jpg" alt="Ulla the Bot" width="335"
+            style="height: auto;">
+    </a>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ullaBanner = document.getElementById('ulla-banner');
+        const closeButton = document.getElementById('ulla-banner-close');
+        const STORAGE_KEY = 'ulla_banner_closed';
+        const HOURS_24 = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+        // Check if banner was closed within the last 24 hours
+        function isBannerClosed() {
+            const closedTime = localStorage.getItem(STORAGE_KEY);
+            if (!closedTime) return false;
+
+            const now = Date.now();
+            const closedAt = parseInt(closedTime);
+            return (now - closedAt) < HOURS_24;
+        }
+
+        // Hide banner if it was closed recently
+        if (isBannerClosed()) {
+            ullaBanner.style.display = 'none';
+            return;
+        }
+
+        // Banner click event (existing functionality)
+        ullaBanner?.addEventListener('click', (event) => {
+            // Don't trigger if clicking the close button
+            if (event.target.id === 'ulla-banner-close' || event.target.closest('#ulla-banner-close')) {
+                return;
+            }
+
+            gtag?.('event', 'click_ulla_banner_main_page', {
+                'event_category': 'Ulla',
+                'event_label': 'clickullabannermainpage'
+            });
+        });
+
+        // Close button click event
+        closeButton?.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            // Hide the banner
+            ullaBanner.style.display = 'none';
+
+            // Store close time in localStorage
+            localStorage.setItem(STORAGE_KEY, Date.now().toString());
+
+            // Send analytics event
+            gtag?.('event', 'close_ulla_banner_main_page', {
+                'event_category': 'Ulla',
+                'event_label': 'closeullabannermainpage'
+            });
+        });
+    });
+
+    // const ullaBanner = document.getElementById('ulla-banner');
+    // const gdprBanner = document.querySelector('.gdpr-banner');
+
+    // if (gdprBanner) {
+    //     ullaBanner.style.bottom = '128px';
+
+    //     const observer = new MutationObserver(() => {
+    //         if (!document.body.contains(gdprBanner)) {
+    //             ullaBanner.style.bottom = '128px';
+    //         } else {
+    //             ullaBanner.style.bottom = (gdprBanner.clientHeight + 20 + 66) + 'px';
+    //         }
+    //     });
+
+    //     observer.observe(document.body, { childList: true, subtree: true });
+    // }
+</script>  <link href="/themes/openweathermap/assets/css/chat-banner.css" rel="stylesheet">
+<link href='/themes/openweathermap/assets/vendor/owm/css/assistant-index.DVVhxENO.css'
+  rel="stylesheet" />
+
+<style>
+  #owm-chat-bot p {
+    font-weight: normal;
+  }
+
+  #owm-chat-bot>div {
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .pop-up-content h2 {
+    margin-top: 19.2px;
+  }
+
+  .owm-chat-bot-description ul {
+    margin: 0;
+    padding: 16px;
+    background-color: #4f4f4f;
+    color: white;
+    border-radius: 4.8px;
+  }
+
+  .owm-chat-bot-description ul.dashed {
+    list-style-type: none;
+  }
+
+  /* .owm-chat-bot-description ul.dashed>li {
+    text-indent: -1rem;
+  } */
+
+  .owm-chat-bot-description ul.dashed>li:before {
+    content: "- ";
+    text-indent: -16px;
+  }
+</style>
+
+<div id="owm-chat-bot" data-key="5796abbde9106b7da4febfae8c44c232" data-popup
+  style="display: none; position: fixed; z-index: 50000; bottom: 16px; right: 16px; height: 640px; max-height: calc(100% - 32px); width: 480px; max-width: calc(100% - 32px);">
+</div>
+
+<script>
+  `ASSISTANT_URL=https://api.openweathermap.org`.split("\n").map(env => env.split('=')).map(env => window[env[0]] = env[1]);
+</script>
+<script
+  src='/themes/openweathermap/assets/vendor/owm/js/assistant-index.C8m1FIny.js'></script>
+
+<div id="chat-banner" class="banner-pop-up">
+  <div class="banner-pop-up-content">
+    <img src="/themes/openweathermap/assets/img/Ulla_bot.png" alt="Ulla the Bot" width="16" height="16">
+    <h3>Ulla Weather Assistant</h3>
+  </div>
+</div>
+
+
+<script>
+  const chatBanner = document.getElementById('chat-banner');
+  const chatBot = document.getElementById('owm-chat-bot');
+
+  chatBanner.addEventListener('click', () => {
+    chatBanner.style.display = 'none';
+    chatBot.style.display = chatBot.style.display === 'none' ? 'block' : 'none';
+    gtag('event', 'maxullaweather', {
+      'event_category': 'Chat',
+      'event_label': 'maxullaweather'
+    });
+  });
+
+  window.addEventListener('minimize', () => {
+    chatBot.style.display = 'none';
+    chatBanner.style.display = 'block';
+    gtag('event', 'minullaweather', {
+      'event_category': 'Chat',
+      'event_label': 'minullaweather'
+    });
+  });
+
+  const gdprBanner = document.querySelector('.gdpr-banner');
+
+  if (gdprBanner) {
+    chatBanner.style.bottom = '80px';
+
+    const observer = new MutationObserver(() => {
+      if (!document.body.contains(gdprBanner)) {
+        chatBanner.style.bottom = '50px';
+      } else {
+        chatBanner.style.bottom = (gdprBanner.clientHeight + 8) + 'px';
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+</script></body>
+
+</html>
