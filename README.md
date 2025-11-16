@@ -444,7 +444,7 @@ If you use this tool in academic research, please cite:
 ```bibtex
 @software{weather_data_aggregator,
   title = {Multi-Source Weather Data Aggregator},
-  author = {Your Name},
+  author = {Rohan Chikkam},
   year = {2025},
   url = {https://github.com/yourusername/weather-data-aggregator},
   note = {A production-grade Python framework for multi-source weather data collection}
