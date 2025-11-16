@@ -1,8 +1,17 @@
-matplotlib>=3.8.0
-numpy>=1.24.0
+# Core dependencies
 pandas>=2.0.0
+numpy>=1.24.0
 requests>=2.31.0
-tqdm>=4.66.0
 
 # Provider SDKs
 meteostat>=1.6.7
+
+# Optional dependencies
+matplotlib>=3.8.0  # For future visualization features
+tqdm>=4.66.0       # For progress bars (not currently used)
+
+# Development dependencies (uncomment if needed)
+# pytest>=7.4.0
+# black>=23.0.0
+# mypy>=1.5.0
+# ruff>=0.1.0

@@ -60,12 +60,7 @@ USE_IEM_ASOS = True
 # Performance settings
 MAX_WORKERS_PROVIDERS = 6  # Parallel providers
 MAX_WORKERS_PER_PROVIDER = 10  # Parallel date batches per provider
-BATCH_SIZE = 30  # Days per request batch (fallback for non-range providers)
-
-# Binary search settings
-USE_BINARY_SEARCH = True  # Use progressive narrowing instead of fixed batches
-MIN_SPLIT_DAYS = 7  # Minimum days before splitting (don't split week-long ranges)
-PROBE_BOUNDARIES = True  # Find earliest/latest available dates first
+BATCH_SIZE = 30  # Days per request batch
 
 # Ensure directories exist
 DATA_ROOT.mkdir(exist_ok=True)
@@ -370,95 +365,55 @@ def load_locations(config):
 
 
 def process_date_batch(client, exporter, provider_key, location_key, location_param,
-                       batch_dates: List[dt.date], location_dir: Path, tracker: ProgressTracker):
+                       batch: List[dt.date], location_dir: Path, tracker: ProgressTracker) -> Tuple[int, int]:
     """
-    Process a batch of dates for a single location.
-
-    Returns:
-        Tuple of (saved, errors)
+    Process a batch of dates.
+    Fetches data day-by-day for the given batch.
     """
     saved = 0
     errors = 0
 
-    if not batch_dates:
-        return saved, errors
-
-    batch_start = batch_dates[0]
-    batch_end = batch_dates[-1]
-
-    try:
-        # Mark dates as processing
-        for date in batch_dates:
+    for date in batch:
+        try:
+            # Mark as processing
             tracker.set_status(provider_key, location_key, date, 'processing')
+            tracker.display()
 
-        tracker.set_current_range(provider_key, location_key, batch_start, batch_end)
-        tracker.display()
+            # Fetch data for single day
+            import pandas as pd
+            df = client.get_historical_data(
+                location=location_param,
+                start_date=date,
+                end_date=date,
+            )
 
-        # Fetch data for the entire batch
-        import pandas as pd
+            # Check if we got data
+            has_data = False
+            if isinstance(df, pd.DataFrame):
+                has_data = not df.empty
+            elif isinstance(df, list):
+                has_data = len(df) > 0
 
-        df = client.get_historical_data(
-            location=location_param,
-            start_date=batch_start,
-            end_date=batch_end,
-        )
-
-        # Process each date in the batch
-        for date in batch_dates:
-            output_path = location_dir / f"{date.isoformat()}.csv"
-
-            try:
-                # Extract data for this specific date
-                if isinstance(df, pd.DataFrame) and not df.empty:
-                    df_day = df[df["timestamp"].dt.date == date] if "timestamp" in df.columns else df
-
-                    if not df_day.empty:
-                        if exporter.save_dataframe(df_day, output_path, location_key):
-                            tracker.set_status(provider_key, location_key, date, 'cached')
-                            saved += 1
-                        else:
-                            tracker.set_status(provider_key, location_key, date, 'failed')
-                            errors += 1
-                    else:
-                        tracker.set_status(provider_key, location_key, date, 'failed')
-                        errors += 1
-
-                elif isinstance(df, list) and df:
-                    # Meteostat case - convert and filter
-                    df_converted = pd.DataFrame(df)
-                    if "time" in df_converted.columns:
-                        df_converted["timestamp"] = pd.to_datetime(df_converted["time"])
-                        df_day = df_converted[df_converted["timestamp"].dt.date == date]
-                    else:
-                        df_day = df_converted
-
-                    if not df_day.empty:
-                        if exporter.save_dataframe(df_day, output_path, location_key):
-                            tracker.set_status(provider_key, location_key, date, 'cached')
-                            saved += 1
-                        else:
-                            tracker.set_status(provider_key, location_key, date, 'failed')
-                            errors += 1
-                    else:
-                        tracker.set_status(provider_key, location_key, date, 'failed')
-                        errors += 1
+            if has_data:
+                # Save to file
+                csv_path = location_dir / f"{date.isoformat()}.csv"
+                if isinstance(df, pd.DataFrame):
+                    df.to_csv(csv_path, index=False)
                 else:
-                    tracker.set_status(provider_key, location_key, date, 'failed')
-                    errors += 1
+                    # Convert list of dicts to DataFrame
+                    pd.DataFrame(df).to_csv(csv_path, index=False)
 
-            except Exception as exc:
-                logger.error(f"{provider_key}[{location_key}][{date}]: {exc}")
+                tracker.set_status(provider_key, location_key, date, 'cached')
+                saved += 1
+            else:
                 tracker.set_status(provider_key, location_key, date, 'failed')
                 errors += 1
 
-        tracker.clear_current_range(provider_key, location_key)
-
-    except Exception as exc:
-        logger.error(f"{provider_key}[{location_key}] batch {batch_start}-{batch_end}: {exc}")
-        for date in batch_dates:
+        except Exception as exc:
+            logger.exception(f"{provider_key}[{location_key}] {date}: {exc}")
             tracker.set_status(provider_key, location_key, date, 'failed')
+            tracker.log(f"{provider_key}/{location_key} {date}: Error - {str(exc)[:50]}")
             errors += 1
-        tracker.clear_current_range(provider_key, location_key)
 
     return saved, errors
 
@@ -479,7 +434,6 @@ def export_location_parallel(provider_key, client, exporter, location_key, lat, 
 
     # Split dates into batches
     batches = [dates_to_fetch[i:i + BATCH_SIZE] for i in range(0, len(dates_to_fetch), BATCH_SIZE)]
-
     tracker.log(f"{provider_key}/{location_key}: Processing {len(dates_to_fetch)} dates in {len(batches)} batches")
 
     # Process batches in parallel
