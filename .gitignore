@@ -1,6 +1,7 @@
-weather_config.json
+config.json
 data/
+logs/
 .venv/
-.pycache/
-logs//logs/
-/logs/
+__pycache__/
+*.pyc
+.claude/

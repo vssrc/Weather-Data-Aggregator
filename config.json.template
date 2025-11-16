@@ -1,0 +1,20 @@
+{
+  "providers": {
+    "noaa_isd": {
+      "token": "YOUR_NOAA_TOKEN_HERE"
+    },
+    "noaa_lcd": {
+      "token": "YOUR_NOAA_TOKEN_HERE"
+    }
+  },
+  "locations": {
+    "new_york": {
+      "lat": 40.78,
+      "lon": -73.97,
+      "noaaIsdStation": "72505394728",
+      "noaaLcdStation": "72505394728",
+      "iemStation": "NYC",
+      "iemNetwork": "NY_ASOS"
+    }
+  }
+}

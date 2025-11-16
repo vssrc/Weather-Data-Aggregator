@@ -6,6 +6,3 @@ tqdm>=4.66.0
 
 # Provider SDKs
 meteostat>=1.6.7
-cdsapi>=0.7.7
-xarray>=2024.7.0
-netcdf4>=1.7.2
