@@ -8,13 +8,50 @@
     }
   },
   "locations": {
-    "new_york": {
+    "new_york_ny": {
       "lat": 40.78,
       "lon": -73.97,
       "noaaIsdStation": "72505394728",
       "noaaLcdStation": "72505394728",
       "iemStation": "NYC",
       "iemNetwork": "NY_ASOS"
+
+    },
+    "austin_tx": {
+      "lat": 30.18,
+      "lon": -97.68,
+      "noaaIsdStation": "72254013904",
+      "noaaLcdStation": "72254013904",
+      "iemStation": "AUS",
+      "iemNetwork": "TX_ASOS"
+
+    },
+    "chicago_midway_il": {
+      "lat": 41.78,
+      "lon": -87.76,
+      "noaaIsdStation": "72534014819",
+      "noaaLcdStation": "72534014819",
+      "iemStation": "MDW",
+      "iemNetwork": "IL_ASOS"
+
+    },
+    "los_angeles_ca": {
+      "lat": 33.94,
+      "lon": -118.39,
+      "noaaIsdStation": "72295023174",
+      "noaaLcdStation": "72295023174",
+      "iemStation": "LAX",
+      "iemNetwork": "CA_ASOS"
+
+    },
+    "miami_fl": {
+      "lat": 25.79,
+      "lon": -80.32,
+      "noaaIsdStation": "72202012839",
+      "noaaLcdStation": "72202012839",
+      "iemStation": "MIA",
+      "iemNetwork": "FL_ASOS"
+
     }
   }
 }
