@@ -1,10 +1,45 @@
 {
   "providers": {
-    "noaa_isd": {
+    "noaa": {
       "token": "YOUR_NOAA_TOKEN_HERE"
     },
-    "noaa_lcd": {
-      "token": "YOUR_NOAA_TOKEN_HERE"
+    "gibs": {
+      "token": "",
+      "layers": [
+        "AIRS_L2_Surface_Air_Temperature_Day",
+        "AIRS_L2_Surface_Air_Temperature_Night",
+        "AIRS_L2_Surface_Skin_Temperature_Day",
+        "AIRS_L2_Surface_Skin_Temperature_Night",
+        "AIRS_L2_RelativeHumidity_700hPa_Day",
+        "AIRS_L2_RelativeHumidity_700hPa_Night",
+        "AIRS_L3_Surface_Air_Temperature_Daily_Day",
+        "AIRS_L3_Surface_Air_Temperature_Daily_Night",
+        "AIRS_L3_Surface_Skin_Temperature_Daily_Day",
+        "AIRS_L3_Surface_Skin_Temperature_Daily_Night",
+        "MODIS_Terra_Land_Surface_Temp_Day",
+        "MODIS_Terra_Land_Surface_Temp_Night",
+        "MODIS_Aqua_Land_Surface_Temp_Day",
+        "MODIS_Aqua_Land_Surface_Temp_Night",
+        "MODIS_Terra_L3_Land_Surface_Temp_Daily_Day",
+        "MODIS_Terra_L3_Land_Surface_Temp_Daily_Night",
+        "MODIS_Aqua_L3_Land_Surface_Temp_Daily_Day",
+        "MODIS_Aqua_L3_Land_Surface_Temp_Daily_Night",
+        "GHRSST_L4_MUR_Sea_Surface_Temperature",
+        "GHRSST_L4_MUR25_Sea_Surface_Temperature",
+        "Cloud Fraction",
+        "Cloud Optical Thickness",
+        "Cloud Top Temperature",
+        "CERES_Combined_Surface_Shortwave_Flux_Down_All_Sky_Monthly",
+        "CERES_Combined_Surface_Longwave_Flux_Down_All_Sky_Monthly",
+        "MERRA2_Total_Precipitable_Water_Vapor_Monthly",
+        "IMERG_Precipitation_Rate",
+        "Albedo",
+        "MERRA2_Surface_Albedo_Monthly",
+        "GLDAS_Underground_Soil_Moisture_Monthly",
+        "NLDAS_Underground_Soil_Moisture_Noah_Monthly",
+        "AMSRU2_Soil_Moisture_NPD_Day",
+        "AMSRU2_Soil_Moisture_NPD_Night"
+      ]
     }
   },
   "locations": {
@@ -14,7 +49,8 @@
       "noaaIsdStation": "72505394728",
       "noaaLcdStation": "72505394728",
       "iemStation": "NYC",
-      "iemNetwork": "NY_ASOS"
+      "iemNetwork": "NY_ASOS",
+      "bbox": [-74.2, 40.6, -73.7, 41.0]
 
     },
     "austin_tx": {
@@ -23,7 +59,8 @@
       "noaaIsdStation": "72254013904",
       "noaaLcdStation": "72254013904",
       "iemStation": "AUS",
-      "iemNetwork": "TX_ASOS"
+      "iemNetwork": "TX_ASOS",
+      "bbox": [-98.0, 30.0, -97.4, 30.4]
 
     },
     "chicago_midway_il": {
@@ -32,7 +69,8 @@
       "noaaIsdStation": "72534014819",
       "noaaLcdStation": "72534014819",
       "iemStation": "MDW",
-      "iemNetwork": "IL_ASOS"
+      "iemNetwork": "IL_ASOS",
+      "bbox": [-88.0, 41.6, -87.5, 42.0]
 
     },
     "los_angeles_ca": {
@@ -41,7 +79,8 @@
       "noaaIsdStation": "72295023174",
       "noaaLcdStation": "72295023174",
       "iemStation": "LAX",
-      "iemNetwork": "CA_ASOS"
+      "iemNetwork": "CA_ASOS",
+      "bbox": [-118.6, 33.8, -118.2, 34.1]
 
     },
     "miami_fl": {
@@ -50,7 +89,8 @@
       "noaaIsdStation": "72202012839",
       "noaaLcdStation": "72202012839",
       "iemStation": "MIA",
-      "iemNetwork": "FL_ASOS"
+      "iemNetwork": "FL_ASOS",
+      "bbox": [-80.5, 25.6, -80.1, 26.0]
 
     }
   }

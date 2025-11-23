@@ -3,6 +3,7 @@
 from .base import BaseExporter
 from .dataframe_exporter import DataFrameExporter
 from .registry import create_exporter, NoaaExporter, IemAsosExporter, MeteostatExporter
+from .image_exporter import ImageExporter
 
 __all__ = [
     "BaseExporter",
@@ -10,5 +11,6 @@ __all__ = [
     "NoaaExporter",
     "IemAsosExporter",
     "MeteostatExporter",
+    "ImageExporter",
     "create_exporter",
 ]

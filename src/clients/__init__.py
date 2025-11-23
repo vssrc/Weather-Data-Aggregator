@@ -6,6 +6,7 @@ from .noaa import NoaaIsdClient, NoaaLcdClient
 from .meteostat import MeteostatClient
 from .nasa_power import NasaPowerClient
 from .iem_asos import IemAsosClient
+from .gibs import GibsClient
 
 __all__ = [
     "WeatherClient",
@@ -16,4 +17,5 @@ __all__ = [
     "MeteostatClient",
     "NasaPowerClient",
     "IemAsosClient",
+    "GibsClient",
 ]

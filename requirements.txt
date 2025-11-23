@@ -3,7 +3,7 @@ pandas>=2.0.0
 numpy>=1.24.0
 requests>=2.31.0
 
-# Provider SDKs
+# Provider SDKs (install to enable all providers)
 meteostat>=1.6.7
 
 # Optional dependencies

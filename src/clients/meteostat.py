@@ -95,16 +95,14 @@ class MeteostatClient(WeatherClient, BatchExecutorMixin):
         location: Union[str, Tuple[float, float]],
         start_date: Union[str, dt.date],
         end_date: Union[str, dt.date],
-    ) -> List[dict]:
-        """Return historical data as list of dicts for compatibility with export script."""
+    ) -> pd.DataFrame:
+        """Return historical data as a DataFrame for consistency with other providers."""
         df = self._get_hourly(
             location=location,
             start_time=start_date,
             end_time=end_date,
         )
-        if df.empty:
-            return []
-        return df.to_dict('records')
+        return df if isinstance(df, pd.DataFrame) else pd.DataFrame()
 
     def get_hourly_batch(
         self,

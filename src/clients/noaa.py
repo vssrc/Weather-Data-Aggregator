@@ -75,7 +75,16 @@ class NoaaAccessClient(WeatherClient, BatchExecutorMixin):
 
         self._full_config = full_config
         self._locations = full_config.get("locations", {})
-        provider_cfg = full_config.get("providers", {}).get(provider, {})
+
+        providers_cfg = full_config.get("providers", {})
+        shared_noaa_cfg = providers_cfg.get("noaa", {})
+        provider_cfg_raw = providers_cfg.get(provider, {})
+        merged_cfg: Dict[str, object] = {}
+        if isinstance(shared_noaa_cfg, Mapping):
+            merged_cfg.update(shared_noaa_cfg)
+        if isinstance(provider_cfg_raw, Mapping):
+            merged_cfg.update(provider_cfg_raw)
+        provider_cfg = merged_cfg
 
         # Hardcoded defaults based on provider type
         if provider == "noaa_isd":
