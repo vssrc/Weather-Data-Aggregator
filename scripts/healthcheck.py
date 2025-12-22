@@ -15,8 +15,6 @@ from src.clients import (
     NoaaIsdClient,
     NoaaLcdClient,
     MeteostatClient,
-    NasaPowerClient,
-    IemAsosClient,
 )
 
 CONFIG_PATH = Path('config.json')
@@ -38,8 +36,6 @@ PROVIDERS = {
     'noaa_isd': {'client': NoaaIsdClient},
     'noaa_lcd': {'client': NoaaLcdClient},
     'meteostat': {'client': MeteostatClient},
-    'nasa_power': {'client': NasaPowerClient},
-    'iem_asos': {'client': IemAsosClient},
 }
 
 HEALTHCHECK_START = dt.date.today() - dt.timedelta(days=730)
@@ -54,13 +50,6 @@ def run_healthcheck(client_name, client_class):
             location = LOCATION_EXTRAS.get(name, {}).get('noaaIsdStation')
         elif client_name == 'noaa_lcd':
             location = LOCATION_EXTRAS.get(name, {}).get('noaaLcdStation')
-        elif client_name == 'iem_asos':
-            station = LOCATION_EXTRAS.get(name, {}).get('iemStation')
-            network = LOCATION_EXTRAS.get(name, {}).get('iemNetwork')
-            if not station or not network:
-                print(f'Skipping {name} for {client_name} due to missing IEM station/network info.')
-                continue
-            location = {'station': station, 'network': network}
 
         if not location:
             print(f'Skipping {name} for {client_name} due to missing location info.')

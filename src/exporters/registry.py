@@ -38,28 +38,6 @@ class NoaaExporter(DataFrameExporter):
         return location_key
 
 
-class IemAsosExporter(DataFrameExporter):
-    """Exporter for IEM ASOS with station and network."""
-
-    def validate_location(self, location_key: str, lat: float, lon: float) -> bool:
-        """Check if location has station and network."""
-        extras = self.location_extras.get(location_key, {})
-        station = extras.get("iemStation")
-        network = extras.get("iemNetwork")
-        if not station or not network:
-            logger.warning(f"{self.provider_key}: Missing iemStation/iemNetwork for {location_key}")
-            return False
-        return True
-
-    def get_location_param(self, location_key: str, lat: float, lon: float):
-        """Return dict with station and network."""
-        extras = self.location_extras.get(location_key, {})
-        return {
-            "station": extras["iemStation"],
-            "network": extras["iemNetwork"],
-        }
-
-
 class MeteostatExporter(DataFrameExporter):
     """
     Exporter for Meteostat which returns List[dict] instead of DataFrame.
@@ -171,11 +149,7 @@ def create_exporter(
     elif provider_key == "meteostat":
         return MeteostatExporter(client, provider_key, data_root, locations, location_extras, max_days_per_request=max_days)
 
-    elif provider_key == "nasa_power":
-        return DataFrameExporter(client, provider_key, data_root, locations, location_extras, max_days_per_request=max_days)
-
-    elif provider_key == "iem_asos":
-        return IemAsosExporter(client, provider_key, data_root, locations, location_extras, max_days_per_request=max_days)
-
     else:
         raise ValueError(f"Unknown provider: {provider_key}")
+
+

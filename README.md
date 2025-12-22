@@ -1,91 +1,105 @@
 # Weather & GIBS Data Aggregator
 
-Unified Python runner that pulls historical weather data (Open-Meteo, NOAA ISD/LCD, Meteostat, NASA POWER, IEM ASOS) and NASA GIBS imagery into a consistent cache with a single terminal UI.
+Unified Python tool for pulling historical weather data and NASA GIBS satellite imagery into a consistent local cache.
+
+## Providers
+
+| Provider | Type | Description |
+|----------|------|-------------|
+| Open-Meteo | Weather | Free weather API |
+| NOAA ISD | Weather | Integrated Surface Database |
+| NOAA LCD | Weather | Local Climatological Data |
+| Meteostat | Weather | Historical weather data |
+| GIBS | Imagery | NASA satellite imagery (54 layers) |
 
 ## Setup
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
-cp config.json.template config.json
 ```
 
-Edit `config.json` with your NOAA token (`providers.noaa.token` is shared by ISD/LCD, override per-provider only if you need different tokens), GIBS layers, and locations (lat/lon plus `bbox` for GIBS).
+## Configuration
+
+Edit `config.json` to configure:
+
+```json
+{
+  "date_range": {
+    "start": "2020-01-01",
+    "end": "today"
+  },
+  "providers": {
+    "gibs": {
+      "frequency": "1d",
+      "layers": ["MODIS_Terra_CorrectedReflectance_TrueColor", ...]
+    }
+  },
+  "locations": {
+    "new_york_ny": {
+      "lat": 40.78,
+      "lon": -73.97,
+      "noaaIsdStation": "72505394728",
+      "noaaLcdStation": "72505394728",
+      "bbox": [-74.2, 40.6, -73.7, 41.0]
+    }
+  }
+}
+```
+
+- **date_range**: Use `"today"` for end date to always fetch up to current date
+- **locations**: Each needs `lat`/`lon`, NOAA station IDs, and `bbox` for GIBS
 
 ## Running
 
 ```bash
-# One-shot export (recommended first run)
+# Run export (uses dates from config)
 python scripts/combined_export.py --once
 
-# Limit providers
-python scripts/combined_export.py --once --providers open_meteo,gibs
+# Override date range
+python scripts/combined_export.py --once --since 2024-01-01 --until today
 
-# Custom range
-python scripts/combined_export.py --once --since 2023-01-01 --until 2023-01-31
+# Limit to specific providers
+python scripts/combined_export.py --once --providers open_meteo,meteostat
 
-# Faster GIBS cadence (e.g., every 6 hours)
-python scripts/combined_export.py --once --gibs-frequency 6h
+# Limit locations
+python scripts/combined_export.py --once --limit-locations 2
+
+# Health check
+python scripts/healthcheck.py
 ```
 
-Flags:
-- `--limit-locations N` limit work to first N locations from config.
-- `--gibs-frequency` set timestamp spacing for GIBS (e.g., `1d`, `6h`, `30m`).
-- `--gibs-refresh-days` force re-download of the most recent N days for GIBS (default 1).
-
-## Data layout
+## Data Layout
 
 ```
 data/
-├── open_meteo/{location}/YYYY-MM-DD.csv
-├── noaa_isd/{location}/YYYY-MM-DD.csv
-├── noaa_lcd/{location}/YYYY-MM-DD.csv
-├── meteostat/{location}/YYYY-MM-DD.csv
-├── nasa_power/{location}/YYYY-MM-DD.csv
-├── iem_asos/{location}/YYYY-MM-DD.csv
+├── open_meteo/{location}.csv
+├── noaa_isd/{location}.csv
+├── noaa_lcd/{location}.csv
+├── meteostat/{location}.csv
 └── gibs/{layer}/{location}/YYYY-MM-DDTHHMMSSZ.png
 ```
 
-## GIBS layers
+Weather data is saved as one consolidated CSV per location. Progress is saved incrementally after each batch.
 
-Configured GIBS layers (deduped from the provided list). All are daily, 2 km PNGs available in Web Mercator and Geographic projections.
+## Project Structure
 
-| Layer | Measurement | Platform / Instrument | Time range | Product codes |
-| --- | --- | --- | --- | --- |
-| Brightness Temperature (Channel 01) AMSUA_NOAA15_Brightness_Temp_Channel_1 | Brightness Temperature | NOAA-15 / AMSU-A | 1998-08-03 - 2025-08-19 | STD: amsua15sp 1 |
-| Brightness Temperature (Channel 02) AMSUA_NOAA15_Brightness_Temp_Channel_2 | Brightness Temperature | NOAA-15 / AMSU-A | 1998-08-03 - 2025-08-19 | STD: amsua15sp 1 |
-| Brightness Temperature (Channel 03) AMSUA_NOAA15_Brightness_Temp_Channel_3 | Brightness Temperature | NOAA-15 / AMSU-A | 1998-08-03 - 2025-08-19 | STD: amsua15sp 1 |
-| Brightness Temperature (Channel 04) AMSUA_NOAA15_Brightness_Temp_Channel_4 | Brightness Temperature | NOAA-15 / AMSU-A | 1998-08-03 - 2025-08-19 | STD: amsua15sp 1 |
-| Brightness Temperature (Channel 05) AMSUA_NOAA15_Brightness_Temp_Channel_5 | Brightness Temperature | NOAA-15 / AMSU-A | 1998-08-03 - 2025-08-19 | STD: amsua15sp 1 |
-| Brightness Temperature (Channel 06) AMSUA_NOAA15_Brightness_Temp_Channel_6 | Brightness Temperature | NOAA-15 / AMSU-A | 1998-08-03 - 2025-08-19 | STD: amsua15sp 1 |
-| Brightness Temperature (Channel 07) AMSUA_NOAA15_Brightness_Temp_Channel_7 | Brightness Temperature | NOAA-15 / AMSU-A | 1998-08-03 - 2025-08-19 | STD: amsua15sp 1 |
-| Brightness Temperature (Channel 08) AMSUA_NOAA15_Brightness_Temp_Channel_8 | Brightness Temperature | NOAA-15 / AMSU-A | 1998-08-03 - 2025-08-19 | STD: amsua15sp 1 |
-| Brightness Temperature (Channel 09) AMSUA_NOAA15_Brightness_Temp_Channel_9 | Brightness Temperature | NOAA-15 / AMSU-A | 1998-08-03 - 2025-08-19 | STD: amsua15sp 1 |
-| Brightness Temperature (Channel 10) AMSUA_NOAA15_Brightness_Temp_Channel_10 | Brightness Temperature | NOAA-15 / AMSU-A | 1998-08-03 - 2025-08-19 | STD: amsua15sp 1 |
-| Brightness Temperature (Channel 12) AMSUA_NOAA15_Brightness_Temp_Channel_12 | Brightness Temperature | NOAA-15 / AMSU-A | 1998-08-03 - 2025-08-19 | STD: amsua15sp 1 |
-| Brightness Temperature (Channel 13) AMSUA_NOAA15_Brightness_Temp_Channel_13 | Brightness Temperature | NOAA-15 / AMSU-A | 1998-08-03 - 2025-08-19 | STD: amsua15sp 1 |
-| Brightness Temperature (Channel 15) AMSUA_NOAA15_Brightness_Temp_Channel_15 | Brightness Temperature | NOAA-15 / AMSU-A | 1998-08-03 - 2025-08-19 | STD: amsua15sp 1 |
-| Brightness Temperature (Ascending) TRMM_Brightness_Temp_Asc | Brightness Temperature | TRMM / TMI | 1997-12-07 - 2015-04-08 | STD: GPM_1CTRMMTMI 07 |
-| Brightness Temperature (Descending) TRMM_Brightness_Temp_Dsc | Brightness Temperature | TRMM / TMI | 1997-12-07 - 2015-04-08 | STD: GPM_1CTRMMTMI 07 |
-| Flash Radiance (Level 2, Standard) LIS_TRMM_Flash_Radiance | Lightning | TRMM / LIS | 1998-01-01 - 2015-04-08 | STD: lislip 4 |
-| Precipitation Rate (30-min) IMERG_Precipitation_Rate_30min | Precipitation Rate | IMERG / n/a | 1998-01-01T00:00:00Z - Present | STD: GPM_3IMERGHH 07; NRT: GPM_3IMERGHHE 07 |
-| Precipitation Rate (Ascending) TRMM_Precipitation_Rate_Asc | Precipitation Rate | TRMM / TMI | 1997-12-07 - 2015-04-08 | STD: GPM_2AGPROFTRMMTMI_CLIM 07 |
-| Precipitation Rate (Descending) TRMM_Precipitation_Rate_Dsc | Precipitation Rate | TRMM / TMI | 1997-12-07 - 2015-04-08 | STD: GPM_2AGPROFTRMMTMI_CLIM 07 |
-| Sea Surface Temperature (L4, AVHRR-OI) GHRSST_L4_AVHRR-OI_Sea_Surface_Temperature | Sea Surface Temperature | Multi-mission / GHRSST | 1981-09-01 - Present | STD: AVHRR_OI-NCEI-L4-GLOB-v2.0 2.0 |
-
-## Progress UI
-
-The terminal shows a live grid per provider and location with color bars (green=cached, orange=processing, red=failed) plus a recent activity tail. Logs are written to `logs/combined_export.log`.
-
-## Threading & performance
-
-- Provider-level concurrency: up to 6 providers in parallel.
-- Weather providers: batched per-location date work with up to 10 workers and 30-day batches.
-- GIBS: per-layer/location/timestamp fan-out with up to 8 workers (tunable in the script).
+```
+├── config.json          # Configuration file
+├── scripts/
+│   ├── combined_export.py   # Main export runner
+│   └── healthcheck.py       # Provider health check
+└── src/
+    ├── clients/         # API clients (Open-Meteo, NOAA, Meteostat, GIBS)
+    ├── core/            # Config, dates, runtime helpers
+    ├── exporters/       # DataFrame and image exporters
+    └── visualization/   # Coverage charts
+```
 
 ## Notes
 
-- NOAA token strongly recommended for large ranges. Add it once at `providers.noaa.token` (legacy `providers.noaa_isd`/`providers.noaa_lcd` entries are now optional overrides).
-- Ensure each location has a `bbox` for GIBS requests.
-- GIBS output uses 512x512 PNGs by default (set in script constants if you need a different size).
+- NOAA data is fetched anonymously (no token required)
+- GIBS output uses 1024x1024 PNGs by default
+- Weather providers run with up to 10 parallel workers per provider
+- GIBS runs with up to 128 parallel workers

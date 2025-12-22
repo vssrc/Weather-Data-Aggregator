@@ -3,8 +3,11 @@
 Combined weather + GIBS export runner with unified terminal UI.
 
 Providers:
-- Weather: Open-Meteo, NOAA ISD/LCD, Meteostat, NASA POWER, IEM ASOS
+- Weather: Open-Meteo, NOAA ISD/LCD, Meteostat
 - Imagery: NASA GIBS layers (PNG)
+
+Dates can be configured in config.json under 'date_range' with 'start' and 'end'.
+Use 'today' as the end date to automatically use the current date.
 """
 
 from __future__ import annotations
@@ -29,8 +32,6 @@ from src.clients import (
     NoaaIsdClient,
     NoaaLcdClient,
     MeteostatClient,
-    NasaPowerClient,
-    IemAsosClient,
     GibsClient,
 )
 from src.exporters import create_exporter, ImageExporter
@@ -63,8 +64,6 @@ USE_OPEN_METEO = True
 USE_NOAA_ISD = True
 USE_NOAA_LCD = True
 USE_METEOSTAT = True
-USE_NASA_POWER = True
-USE_IEM_ASOS = True
 USE_GIBS = True
 
 # Ensure directories exist
@@ -351,6 +350,21 @@ def parse_datetime_arg(value: Optional[str], *, default: dt.datetime) -> dt.date
     return parsed
 
 
+def parse_config_date(value: str) -> dt.date:
+    """
+    Parse a date from config, supporting 'today' keyword.
+    
+    Args:
+        value: Either 'today' or a date string in YYYY-MM-DD format.
+        
+    Returns:
+        The parsed date, or today's date if value is 'today'.
+    """
+    if value.lower() == "today":
+        return dt.date.today()
+    return dt.date.fromisoformat(value)
+
+
 def check_existing_weather_cache(
     tracker: ProgressTracker,
     provider: str,
@@ -359,19 +373,33 @@ def check_existing_weather_cache(
     steps: Iterable[dt.date],
     refresh_recent: bool = True,
 ) -> None:
+    """Check for cached dates in the consolidated CSV file."""
+    import pandas as pd
     yesterday = dt.date.today() - dt.timedelta(days=1)
     today = dt.date.today()
+    
+    csv_file = location_dir / f"{location_key}.csv"
+    cached_dates = set()
+    
+    if csv_file.exists():
+        try:
+            df = pd.read_csv(csv_file)
+            if 'timestamp' in df.columns:
+                df['timestamp'] = pd.to_datetime(df['timestamp'])
+                cached_dates = set(df['timestamp'].dt.date.unique())
+        except Exception:
+            pass  # If file is corrupted, treat as no cache
+    
     for step in steps:
         if refresh_recent and step in (yesterday, today):
             continue
-        csv_file = location_dir / f"{step.isoformat()}.csv"
-        if csv_file.exists():
+        if step in cached_dates:
             tracker.set_status(provider, location_key, step, "cached")
     
     # Log summary of initial cache check
     cached_count = sum(1 for step in steps if tracker.state[provider][location_key].get(step) == "cached")
     if cached_count > 0:
-        tracker.log(f"{provider}/{location_key}: Found {cached_count} cached files")
+        tracker.log(f"{provider}/{location_key}: Found {cached_count} cached dates in {location_key}.csv")
 
 
 def check_existing_gibs_cache(
@@ -412,15 +440,16 @@ def process_date_batch(
     batch: List[dt.date],
     location_dir: Path,
     tracker: ProgressTracker,
-) -> Tuple[int, int]:
-    saved = 0
+) -> Tuple[List[pd.DataFrame], int]:
+    """Fetch data for a batch of dates and return DataFrames (not save yet)."""
+    import pandas as pd
+    
+    dfs = []
     errors = 0
     for day in batch:
         try:
             tracker.set_status(provider_key, location_key, day, "processing")
             tracker.display()
-
-            import pandas as pd
 
             df = client.get_historical_data(location=location_param, start_date=day, end_date=day)
 
@@ -430,10 +459,8 @@ def process_date_batch(
             has_data = isinstance(df, pd.DataFrame) and not df.empty
 
             if has_data:
-                csv_path = location_dir / f"{day.isoformat()}.csv"
-                df.to_csv(csv_path, index=False)
+                dfs.append(df)
                 tracker.set_status(provider_key, location_key, day, "cached")
-                saved += 1
             else:
                 tracker.set_status(provider_key, location_key, day, "failed")
                 errors += 1
@@ -442,7 +469,7 @@ def process_date_batch(
             tracker.set_status(provider_key, location_key, day, "failed")
             tracker.log(f"{provider_key}/{location_key} {day}: Error - {str(exc)[:50]}")
             errors += 1
-    return saved, errors
+    return dfs, errors
 
 
 def export_location_parallel(
@@ -456,14 +483,51 @@ def export_location_parallel(
     steps_to_fetch: List[dt.date],
     tracker: ProgressTracker,
 ) -> Tuple[int, int]:
+    """Fetch dates for a location and save incrementally to CSV after each batch."""
+    import pandas as pd
+    from threading import Lock
+    
     if not steps_to_fetch:
         return 0, 0
 
-    saved = 0
+    csv_path = location_dir / f"{location_key}.csv"
+    csv_lock = Lock()  # Thread-safe CSV writes
+    total_saved = 0
     errors = 0
     location_param = exporter.get_location_param(location_key, lat, lon)
     batches = [steps_to_fetch[i : i + BATCH_SIZE] for i in range(0, len(steps_to_fetch), BATCH_SIZE)]
     tracker.log(f"{provider_key}/{location_key}: Processing {len(steps_to_fetch)} dates in {len(batches)} batches")
+
+    def append_to_csv(new_dfs: List[pd.DataFrame]) -> int:
+        """Thread-safe append of new data to CSV, returns row count saved."""
+        if not new_dfs:
+            return 0
+        
+        with csv_lock:
+            new_data = pd.concat(new_dfs, ignore_index=True)
+            if 'timestamp' in new_data.columns:
+                new_data['timestamp'] = pd.to_datetime(new_data['timestamp'])
+            
+            if csv_path.exists():
+                try:
+                    existing = pd.read_csv(csv_path)
+                    if 'timestamp' in existing.columns:
+                        existing['timestamp'] = pd.to_datetime(existing['timestamp'])
+                    combined = pd.concat([existing, new_data], ignore_index=True)
+                    if 'timestamp' in combined.columns:
+                        combined = combined.drop_duplicates(subset=['timestamp'], keep='last')
+                        combined = combined.sort_values('timestamp')
+                    combined.to_csv(csv_path, index=False)
+                    return len(new_data)
+                except Exception as exc:
+                    logger.warning(f"{provider_key}/{location_key}: Merge error, appending fresh: {exc}")
+                    new_data.to_csv(csv_path, index=False)
+                    return len(new_data)
+            else:
+                if 'timestamp' in new_data.columns:
+                    new_data = new_data.sort_values('timestamp')
+                new_data.to_csv(csv_path, index=False)
+                return len(new_data)
 
     with ThreadPoolExecutor(max_workers=MAX_WORKERS_PER_PROVIDER) as executor:
         futures = {
@@ -483,14 +547,26 @@ def export_location_parallel(
         for future in as_completed(futures):
             batch = futures[future]
             try:
-                batch_saved, batch_errors = future.result()
-                saved += batch_saved
+                batch_dfs, batch_errors = future.result()
                 errors += batch_errors
+                
+                # Save incrementally after each batch
+                if batch_dfs:
+                    rows_saved = append_to_csv(batch_dfs)
+                    total_saved += len(batch_dfs)
+                    tracker.log(f"{provider_key}/{location_key}: Saved batch ({rows_saved} rows)")
+                
                 tracker.display()
             except Exception as exc:  # pylint: disable=broad-except
                 logger.exception("%s[%s] batch error: %s", provider_key, location_key, exc)
                 errors += len(batch)
-    return saved, errors
+    
+    if total_saved > 0:
+        tracker.log(f"{provider_key}/{location_key}: Total {total_saved} batches saved to {location_key}.csv")
+    
+    return total_saved, errors
+
+
 
 
 def export_weather_provider(
@@ -520,12 +596,10 @@ def export_weather_provider(
 
         tracker.log(f"{provider_key}: Checking cache...")
         for location_name, _, _ in locations:
-            location_dir = exporter.provider_dir / location_name
-            location_dir.mkdir(parents=True, exist_ok=True)
-            # Skip a second scan if the pre-run cache pass already populated this location
+            # Check cache at provider directory level (no location subdirectory)
             if not tracker.state[provider_key][location_name]:
                 check_existing_weather_cache(
-                    tracker, provider_key, location_name, location_dir, steps, refresh_recent=True
+                    tracker, provider_key, location_name, exporter.provider_dir, steps, refresh_recent=True
                 )
 
         tracker.display()
@@ -537,8 +611,9 @@ def export_weather_provider(
                 tracker.log(f"{provider_key}/{location_key}: Skipping (validation failed)")
                 continue
 
-            location_dir = exporter.provider_dir / location_key
-            location_dir.mkdir(parents=True, exist_ok=True)
+            # Use provider directory directly (no location subdirectory)
+            provider_dir = exporter.provider_dir
+            provider_dir.mkdir(parents=True, exist_ok=True)
 
             to_fetch = [d for d in steps if tracker.state[provider_key][location_key].get(d) != "cached"]
             if not to_fetch:
@@ -546,7 +621,7 @@ def export_weather_provider(
                 continue
 
             saved, errors = export_location_parallel(
-                provider_key, client, exporter, location_key, lat, lon, location_dir, to_fetch, tracker
+                provider_key, client, exporter, location_key, lat, lon, provider_dir, to_fetch, tracker
             )
             total_saved += saved
             total_errors += errors
@@ -695,8 +770,6 @@ def run_export_once(
         "noaa_isd": (NoaaIsdClient, USE_NOAA_ISD),
         "noaa_lcd": (NoaaLcdClient, USE_NOAA_LCD),
         "meteostat": (MeteostatClient, USE_METEOSTAT),
-        "nasa_power": (NasaPowerClient, USE_NASA_POWER),
-        "iem_asos": (IemAsosClient, USE_IEM_ASOS),
         "gibs": (GibsClient, USE_GIBS),
     }
     if provider_filter:
@@ -739,11 +812,11 @@ def run_export_once(
     for provider in enabled_providers:
         if provider == "gibs":
             continue
+        provider_dir = DATA_ROOT / provider
+        provider_dir.mkdir(parents=True, exist_ok=True)
         for location_key, _, _ in locations:
-            location_dir = DATA_ROOT / provider / location_key
-            location_dir.mkdir(parents=True, exist_ok=True)
             check_existing_weather_cache(
-                tracker, provider, location_key, location_dir, weather_steps, refresh_recent=True
+                tracker, provider, location_key, provider_dir, weather_steps, refresh_recent=True
             )
 
     tracker.display()
@@ -796,11 +869,11 @@ def run_export_once(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Combined weather + GIBS export runner")
     parser.add_argument("--once", action="store_true", help="Run a single cycle and exit")
-    parser.add_argument("--since", type=str, default=None, help="Start date YYYY-MM-DD (also used for GIBS)")
-    parser.add_argument("--until", type=str, default=None, help="End date YYYY-MM-DD (also used for GIBS)")
+    parser.add_argument("--since", type=str, default=None, help="Override start date YYYY-MM-DD (from config if not set)")
+    parser.add_argument("--until", type=str, default=None, help="Override end date YYYY-MM-DD or 'today' (from config if not set)")
     parser.add_argument("--providers", type=str, default=None, help="Comma-separated provider keys")
     parser.add_argument("--limit-locations", type=int, default=None, help="Limit number of locations")
-    parser.add_argument("--gibs-frequency", type=str, default=DEFAULT_GIBS_FREQ, help="Frequency for GIBS (e.g. 1d, 6h, 30m)")
+    parser.add_argument("--gibs-frequency", type=str, default=None, help="Override frequency for GIBS (e.g. 1d, 6h, 30m)")
     parser.add_argument("--gibs-refresh-days", type=int, default=GIBS_REFRESH_DAYS, help="Refresh window for GIBS (days)")
     args = parser.parse_args()
 
@@ -810,14 +883,32 @@ def main() -> None:
         locations = locations[: args.limit_locations]
         logger.info("Limited to %s location(s)", len(locations))
 
-    start_date = parse_date_arg(args.since, default=START_DATE)
-    end_date = parse_date_arg(args.until, default=END_DATE)
+    # Read dates from config, with CLI override
+    date_range_cfg = config.get("date_range", {})
+    config_start = date_range_cfg.get("start", "2000-01-01")
+    config_end = date_range_cfg.get("end", "today")
+    
+    if args.since:
+        start_date = parse_config_date(args.since)
+    else:
+        start_date = parse_config_date(config_start)
+    
+    if args.until:
+        end_date = parse_config_date(args.until)
+    else:
+        end_date = parse_config_date(config_end)
+    
     if end_date < start_date:
         logger.error("End date must be on or after start date")
         print("Error: End date must be on or after start date")
         sys.exit(1)
+    
+    logger.info("Date range: %s to %s", start_date, end_date)
 
-    freq = parse_frequency(args.gibs_frequency)
+    # Read GIBS frequency from config, with CLI override
+    gibs_cfg = config.get("providers", {}).get("gibs", {})
+    gibs_freq_str = args.gibs_frequency or gibs_cfg.get("frequency", DEFAULT_GIBS_FREQ)
+    freq = parse_frequency(gibs_freq_str)
     gibs_start_dt = dt.datetime.combine(start_date, dt.time(0, 0))
     gibs_end_dt = dt.datetime.combine(end_date, dt.time(23, 59))
     gibs_steps = generate_timestamps(gibs_start_dt, gibs_end_dt, freq)

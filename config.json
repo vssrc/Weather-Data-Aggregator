@@ -1,10 +1,11 @@
 {
+  "date_range": {
+    "start": "2020-01-01",
+    "end": "today"
+  },
   "providers": {
-    "noaa": {
-      "token": "YOUR_NOAA_TOKEN_HERE"
-    },
     "gibs": {
-      "token": "",
+      "frequency": "1d",
       "layers": [
         "AMSUA_NOAA15_Brightness_Temp_Channel_1",
         "AMSUA_NOAA15_Brightness_Temp_Channel_2",
@@ -62,7 +63,6 @@
         "MODIS_Aqua_Cloud_Top_Temp_Night"
       ]
     }
-
   },
   "locations": {
     "new_york_ny": {
@@ -70,50 +70,60 @@
       "lon": -73.97,
       "noaaIsdStation": "72505394728",
       "noaaLcdStation": "72505394728",
-      "iemStation": "NYC",
-      "iemNetwork": "NY_ASOS",
-      "bbox": [-74.2, 40.6, -73.7, 41.0]
-
+      "bbox": [
+        -74.2,
+        40.6,
+        -73.7,
+        41.0
+      ]
     },
     "austin_tx": {
       "lat": 30.18,
       "lon": -97.68,
       "noaaIsdStation": "72254013904",
       "noaaLcdStation": "72254013904",
-      "iemStation": "AUS",
-      "iemNetwork": "TX_ASOS",
-      "bbox": [-98.0, 30.0, -97.4, 30.4]
-
+      "bbox": [
+        -98.0,
+        30.0,
+        -97.4,
+        30.4
+      ]
     },
     "chicago_midway_il": {
       "lat": 41.78,
       "lon": -87.76,
       "noaaIsdStation": "72534014819",
       "noaaLcdStation": "72534014819",
-      "iemStation": "MDW",
-      "iemNetwork": "IL_ASOS",
-      "bbox": [-88.0, 41.6, -87.5, 42.0]
-
+      "bbox": [
+        -88.0,
+        41.6,
+        -87.5,
+        42.0
+      ]
     },
     "los_angeles_ca": {
       "lat": 33.94,
       "lon": -118.39,
       "noaaIsdStation": "72295023174",
       "noaaLcdStation": "72295023174",
-      "iemStation": "LAX",
-      "iemNetwork": "CA_ASOS",
-      "bbox": [-118.6, 33.8, -118.2, 34.1]
-
+      "bbox": [
+        -118.6,
+        33.8,
+        -118.2,
+        34.1
+      ]
     },
     "miami_fl": {
       "lat": 25.79,
       "lon": -80.32,
       "noaaIsdStation": "72202012839",
       "noaaLcdStation": "72202012839",
-      "iemStation": "MIA",
-      "iemNetwork": "FL_ASOS",
-      "bbox": [-80.5, 25.6, -80.1, 26.0]
-
+      "bbox": [
+        -80.5,
+        25.6,
+        -80.1,
+        26.0
+      ]
     }
   }
 }

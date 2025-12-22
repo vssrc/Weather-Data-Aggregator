@@ -4,8 +4,6 @@ from .base import WeatherClient, BatchExecutorMixin
 from .open_meteo import OpenMeteoClient
 from .noaa import NoaaIsdClient, NoaaLcdClient
 from .meteostat import MeteostatClient
-from .nasa_power import NasaPowerClient
-from .iem_asos import IemAsosClient
 from .gibs import GibsClient
 
 __all__ = [
@@ -15,7 +13,6 @@ __all__ = [
     "NoaaIsdClient",
     "NoaaLcdClient",
     "MeteostatClient",
-    "NasaPowerClient",
-    "IemAsosClient",
     "GibsClient",
 ]
+
